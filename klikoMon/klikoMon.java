@@ -13,9 +13,18 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import javax.swing.*;
+
 public class klikoMon {
     public static void main(String... args) throws IOException {
-        String title = "";
+        System.out.println("Проверка ежедневки: папок 101D,123D,135D в kliko с G:/BALANCE.DAY/pak");
+        specCheck("http://192.168.21.25/ftp/F101D/","G:/BALANCE.DAY/pak");
+        specCheck("http://192.168.21.25/ftp/F123D/","none");
+        specCheck("http://192.168.21.25/ftp/F135D/","none");
+
+        System.out.println();
+        System.out.println();
+        System.out.println("Проверка папки !!!new в kliko");
         Document doc;
 
         ArrayList<String[]> pathDates = new ArrayList<>();
@@ -23,34 +32,33 @@ public class klikoMon {
 
         try {
             doc = Jsoup.connect("http://192.168.21.25/ftp/$new.htm").get();
-
-            Elements urls = doc.select("a"); //парсим маяк "а"
             Elements dates= doc.select("td");
-
+/*
+            Elements urls = doc.select("a"); //парсим маяк "а"
             for(Element url : urls){ //перебираем все ссылки
                 //... и вытаскиваем их название...
                 System.out.println(url.attr("href"));
             }
 
             System.out.println();
-
+*/
             for(int i = 0; i<dates.size(); i=i+2){
                 String[] str = new String[2];
-                System.out.print(dates.get(i).text());
-                System.out.println(" " + dates.get(i+1).text());
-                str[0] = dates.get(i).text();
-                str[1] = dates.get(i+1).text();
+                //System.out.print(dates.get(i).text());
+                //System.out.println(" " + dates.get(i+1).text());
+                str[0] = dates.get(i).text();//путь
+                str[1] = dates.get(i+1).text();//дата
                 pathDates.add(str);
             }
 
-            System.out.println();
-            System.out.println("urls.size() = " + urls.size());
-            System.out.println("dates.size() = " + dates.size());
+            //System.out.println();
+            //System.out.println("urls.size() = " + urls.size());
+            //System.out.println("dates.size() = " + dates.size());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        System.out.println();
+        //System.out.println();
 
         for(int i = 0; i < pathDates.size(); i++){
             String path = pathDates.get(i)[0];
@@ -58,8 +66,8 @@ public class klikoMon {
             String[] temp = new String[2];
 
             if(!path.substring(0,3).equals("!!!")&&!path.substring(0,3).equals("Пос")){
-                System.out.print(path+" ");
-                System.out.println(strDate.substring(1,strDate.length()-1));
+                //System.out.print(path+" ");
+                //System.out.println(strDate.substring(1,strDate.length()-1));
                 temp[0] = path.replace("\\","/");
                 temp[1] = strDate.substring(7,11) + strDate.substring(4,6) + strDate.substring(1,3);
                 realData.add(temp);
@@ -72,11 +80,16 @@ public class klikoMon {
             System.out.println(s[1]);
         }
 
-        System.out.println();
-        System.out.println(getDayToday());
+        //System.out.println(getDayToday());
 
         //для закачки:
-        //downloadDay("20170526",realData);
+        String downloadDay = JOptionPane.showInputDialog(
+                null,
+                "Введите дату скачиваемых файлов в формате yyyymmdd или none");
+        if(!downloadDay.equals("none"))
+            downloadDay(downloadDay,realData);
+
+        JOptionPane.showMessageDialog(null, "Работа программы завершена");
     }
 
     public static void downloadDay(String date, ArrayList<String[]> pathDates) throws IOException {
@@ -131,5 +144,44 @@ public class klikoMon {
                 }
             }
         }
+    }
+
+    private static void specCheck(String path,String folder){
+        if(!folder.equals("none"))
+            try{
+                printFileFolderList(folder);
+            }catch(NullPointerException e){
+                System.out.println("Папка не найдена: "+folder);
+            }
+
+        Document doc;
+        try {
+            doc = Jsoup.connect(path).get();
+            Elements urls = doc.select("a");
+            System.out.println();
+            for(Element url : urls){
+                System.out.print(url.text()+" ");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void printFileFolderList(String s){
+        File folder = new File(s);
+
+        final String[] mask = { ".exe", ".pak" };//exe - для примера если хочется других расширений проверить
+        String[] files = folder.list(new FilenameFilter() {
+
+            @Override public boolean accept(File folder, String name) {
+                for(String s : mask)
+                    if(name.toLowerCase().endsWith(s)) return true;
+                return false;
+            }
+        });
+
+        for(String fileName : files)
+            System.out.print(fileName+" ");
+        //return files;
     }
 }
