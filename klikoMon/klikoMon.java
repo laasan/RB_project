@@ -69,7 +69,12 @@ public class klikoMon {
                 //System.out.print(path+" ");
                 //System.out.println(strDate.substring(1,strDate.length()-1));
                 temp[0] = path.replace("\\","/");
-                temp[1] = strDate.substring(7,11) + strDate.substring(4,6) + strDate.substring(1,3);
+                if(strDate.length()>=11)
+                    temp[1] = strDate.substring(7,11) + strDate.substring(4,6) + strDate.substring(1,3);
+                else {
+                    temp[1] = strDate;
+                    System.out.println("Attention! Strange date: "+strDate);
+                }
                 realData.add(temp);
             }
         }
