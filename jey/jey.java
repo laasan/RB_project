@@ -1,4 +1,4 @@
-﻿import javax.swing.*;
+import javax.swing.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -77,6 +77,8 @@ public class jey {
         temp = sb.toString();
 */
 
+                    if(fileName.substring(0,4).equals("BOS1")) //обрезка BOS1_
+                        fileName = fileName.substring(5,fileName.length());
 
                     //выводим всю эту ботву
                     if(!pb2) newFileStr.add(fileName.substring(0,fileName.length()-4)+"###");
