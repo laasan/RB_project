@@ -11,10 +11,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class xml550csv {
+    public static person tempPerson;
+    public static List<person> personList;
+    public static String fileName;
+
     public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException {
         //String fileName = "CB_ES550P_20170627_002.XML";
-        List<person> personList = new ArrayList<person>();
-        String fileName = "";
+        boolean formatOne = true; //формат выгрузки true - в один файл, false - каждый в свой
+        personList = new ArrayList<person>();
+        /*
+        String fileNameList[] =
+                {"CB_ES550P_20170627_002.XML"};
+        */
+
         String fileNameList[] =
                 {"CB_ES550P_20170626_001.XML","CB_ES550P_20170626_002.XML","CB_ES550P_20170626_003.XML","CB_ES550P_20170626_004.XML","CB_ES550P_20170626_005.XML",
                         "CB_ES550P_20170626_006.XML","CB_ES550P_20170626_007.XML","CB_ES550P_20170626_008.XML","CB_ES550P_20170626_009.XML","CB_ES550P_20170627_001.XML",
@@ -29,81 +38,48 @@ public class xml550csv {
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
-            //personList = new ArrayList<person>(); //раскоментить если каждый файл xml в отдельный файл
+            if(!formatOne) personList = new ArrayList<person>(); //отрабатывает если каждый файл xml в отдельный файл
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(fileName);
 
-            person tempPerson;
+            //person tempPerson;
 
             NodeList nodeList = doc.getElementsByTagName("Раздел1.1");
-            if(nodeList.getLength()!=0)
-                for(int i = 0; i < nodeList.getLength(); i++){
-                    tempPerson = new person();
-                    tempPerson.setRazdel("11");
-                    //System.out.println(nodeList.item(i).getNodeName());
-
-                    NodeList nodeList1 = nodeList.item(i).getChildNodes();
-                    for(int j = 0; j < nodeList1.getLength(); j++){
-                        Node node1 = nodeList1.item(j);
-                        if(node1.getNodeType()==Node.ELEMENT_NODE){
-                            if(node1.getNodeName().equals("НомерЗаписи"))tempPerson.setNoteId(node1.getTextContent());
-                            if(node1.getNodeName().equals("ТипКлиента"))tempPerson.setClientType(node1.getTextContent());
-
-                            if(node1.getNodeName().equals("СведФЛИП")) addFLIP(node1,tempPerson, personList);
-                            else if(node1.getNodeName().equals("СведЮЛ")) addUL(node1, tempPerson, personList);
-                            else if(node1.getNodeName().equals("СведИНБОЮЛ")) addINBOUL(node1, tempPerson, personList);
-
-                            //nodeList1.item(j).getTextContent()
-                            //System.out.println("  "+nodeList1.item(j).getNodeName()+" "+nodeList1.item(j).getTextContent());
-                        }
-                    }
-                }
+            if(nodeList.getLength()!=0) razdel1(nodeList,"11","ТипКлиента");
 
             nodeList = doc.getElementsByTagName("Раздел1.2");
-            if(nodeList.getLength()!=0)
-                for(int i = 0; i < nodeList.getLength(); i++){
-                    tempPerson = new person();
-                    tempPerson.setRazdel("12");
-
-                    NodeList nodeList1 = nodeList.item(i).getChildNodes();
-                    for(int j = 0; j < nodeList1.getLength(); j++) {
-                        Node node1 = nodeList1.item(j);
-                        if (node1.getNodeType() == Node.ELEMENT_NODE) {
-                            if (node1.getNodeName().equals("НомерЗаписи")) tempPerson.setNoteId(node1.getTextContent());
-                            if (node1.getNodeName().equals("ТипУчастника")) tempPerson.setClientType(node1.getTextContent());
-
-                            if(node1.getNodeName().equals("СведФЛИП")) addFLIP(node1,tempPerson, personList);
-                            else if(node1.getNodeName().equals("СведЮЛ")) addUL(node1, tempPerson, personList);
-                            else if(node1.getNodeName().equals("СведИНБОЮЛ")) addINBOUL(node1, tempPerson, personList);
-                        }
-                    }
-                }
+            if(nodeList.getLength()!=0) razdel1(nodeList,"11","ТипУчастника");
 
             nodeList = doc.getElementsByTagName("Раздел2");
             if(nodeList.getLength()!=0)
                 for(int i = 0; i < nodeList.getLength(); i++){
-                    tempPerson = new person();
-                    tempPerson.setRazdel("2");
+                    //tempPerson = new person();                     //для учёта нескольких участников создание new person в ноде про участников
+                    //tempPerson.setRazdel("2");
+                    String tempNodeId = "";
 
                     if (nodeList.item(i).getNodeType() == Node.ELEMENT_NODE){
                         NodeList nodeList1 = nodeList.item(i).getChildNodes();
                         for(int j = 0; j < nodeList1.getLength(); j++) {
                             Node node1 = nodeList1.item(j);
                             if (node1.getNodeType() == Node.ELEMENT_NODE) {
-                                if (node1.getNodeName().equals("НомерЗаписи")) tempPerson.setNoteId(node1.getTextContent());
+                                if (node1.getNodeName().equals("НомерЗаписи")){
+                                    //System.out.println(node1.getTextContent());
+                                    //tempPerson.setNoteId(node1.getTextContent());
+                                    tempNodeId = node1.getTextContent();
+                                }
                                 if (node1.getNodeName().equals("Участник")){
+
+                                    tempPerson = new person();        //создание new person здесь - это нюанс для ситуации с несколькими участниками
+                                    tempPerson.setRazdel("2");        //вся добываемая выше информация должна заполняться в person здесь
+                                    tempPerson.setNoteId(tempNodeId);
+
                                     NodeList nodeListUch = node1.getChildNodes();
                                     for(int m = 0; m < nodeListUch.getLength(); m++){
                                         Node node = nodeListUch.item(m);
-                                        if (node.getNodeName().equals("СтатусУчастника")){
-                                            //System.out.println(node.getTextContent());
-                                            tempPerson.setUchStatus(node.getTextContent());
-                                        }
+                                        if (node.getNodeName().equals("СтатусУчастника")) tempPerson.setUchStatus(node.getTextContent());
                                         if (node.getNodeName().equals("ТипУчастника")) tempPerson.setClientType(node.getTextContent());
 
-                                        if(node.getNodeName().equals("СведФЛИП")) addFLIP(node,tempPerson, personList);
-                                        if(node.getNodeName().equals("СведЮЛ")) addUL(node, tempPerson, personList);
-                                        if(node.getNodeName().equals("СведИНБОЮЛ")) addINBOUL(node, tempPerson, personList);
+                                        personAdd(node,tempPerson,personList);
                                     }
                                 }
                             }
@@ -112,12 +88,40 @@ public class xml550csv {
 
                 }
 
-            //CSVgen(personList,fileName); //раскоментить если каждый файл xml в отдельный файл
+            if(!formatOne) CSVgen(personList,fileName); //отрабатывает если каждый файл xml в отдельный файл
 
         }
 
-        CSVgen(personList,"all550.XXX"); //закоментить если каждый файл xml в отдельный файл, раскоментить для единого сборища
+        if(formatOne) CSVgen(personList,"all550.XXX"); //отрабатывает если всё собирается в один файл
 
+    }
+
+    public static void razdel1(NodeList nodeList, String razdel, String ClyentTypeTag){
+        for(int i = 0; i < nodeList.getLength(); i++){
+            tempPerson = new person();
+            tempPerson.setRazdel(razdel);
+            //System.out.println(nodeList.item(i).getNodeName());
+
+            NodeList nodeList1 = nodeList.item(i).getChildNodes();
+            for(int j = 0; j < nodeList1.getLength(); j++){
+                Node node1 = nodeList1.item(j);
+                if(node1.getNodeType()==Node.ELEMENT_NODE){
+                    if(node1.getNodeName().equals("НомерЗаписи"))tempPerson.setNoteId(node1.getTextContent());
+                    if(node1.getNodeName().equals(ClyentTypeTag))tempPerson.setClientType(node1.getTextContent());
+
+                    personAdd(node1,tempPerson,personList);
+
+                    //nodeList1.item(j).getTextContent()
+                    //System.out.println("  "+nodeList1.item(j).getNodeName()+" "+nodeList1.item(j).getTextContent());
+                }
+            }
+        }
+    }
+
+    public static void personAdd(Node node, person tempPerson, List<person> personList){
+        if(node.getNodeName().equals("СведФЛИП")) addFLIP(node,tempPerson, personList);
+        else if(node.getNodeName().equals("СведЮЛ")) addUL(node, tempPerson, personList);
+        else if(node.getNodeName().equals("СведИНБОЮЛ")) addINBOUL(node, tempPerson, personList);
     }
 
     public static void addFLIP(Node node1, person tempPerson, List<person> personList){
@@ -152,6 +156,7 @@ public class xml550csv {
                 }
             }
         }
+        tempPerson.setSourceFileName(fileName);
         personList.add(tempPerson);
     }
 
@@ -164,6 +169,7 @@ public class xml550csv {
                 if(node2.getNodeName().equals("ИННЮЛ"))tempPerson.setInn(node2.getTextContent());
             }
         }
+        tempPerson.setSourceFileName(fileName);
         personList.add(tempPerson);
     }
 
@@ -176,12 +182,13 @@ public class xml550csv {
                     tempPerson.setPolnNaim(node2.getTextContent());
             }
         }
+        tempPerson.setSourceFileName(fileName);
         personList.add(tempPerson);
     }
 
 
     public static void CSVgen(List<person> personList,String fileName){
-        String HEADER = "NoteId;ClientType;Fio;Inn;PolnNaim;Razdel;UchStatus;DocumentNum";
+        String HEADER = "NoteId;ClientType;Fio;Inn;PolnNaim;Razdel;UchStatus;DocumentNum;SourceFileName";
         String DELIMITER = ";";
         String NEW_LINE_SEPARATOR="\r\n";
         try {
@@ -204,6 +211,8 @@ public class xml550csv {
                 fileWriter.append(p.getUchStatus());
                 fileWriter.append(DELIMITER);
                 fileWriter.append(p.getDocumentNum());
+                fileWriter.append(DELIMITER);
+                fileWriter.append(p.getSourceFileName());
             }
             fileWriter.flush();
             fileWriter.close();

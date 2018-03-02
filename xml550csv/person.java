@@ -7,6 +7,7 @@ public class person {
             ,Razdel      //раздел: 11,12,2 соответственно для Раздел1.1,Раздел1.2,Раздел2
             ,UchStatus   //статус участника для Раздел2
             ,DocumentNum // Серия+Номер паспорта (для начала)
+            ,SourceFileName //файл из которого его достали
             ;
 
     public String getNoteId() {
@@ -79,5 +80,14 @@ public class person {
 
     public void setDocumentNum(String documentNum) {
         DocumentNum = documentNum;
+    }
+
+    public String getSourceFileName() {
+        if(this.SourceFileName != null) return SourceFileName;
+        else return "";
+    }
+
+    public void setSourceFileName(String sourceFileName) {
+        SourceFileName = sourceFileName;
     }
 }
