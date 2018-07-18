@@ -29,7 +29,7 @@ public class person {
     }
 
     public String getFio() {
-        if(this.Fio != null) return Fio;
+        if(this.Fio != null) return Fio.replace(";"," ");
         else return "";
     }
 
@@ -47,7 +47,7 @@ public class person {
     }
 
     public String getPolnNaim() {
-        if(this.PolnNaim != null) return PolnNaim;
+        if(this.PolnNaim != null) return PolnNaim.replace(";"," ");
         else return "";
     }
 
@@ -74,7 +74,7 @@ public class person {
     }
 
     public String getDocumentNum() {
-        if(this.DocumentNum != null) return DocumentNum;
+        if(this.DocumentNum != null) return DocumentNum.replace(";"," ");
         else return "";
     }
 
