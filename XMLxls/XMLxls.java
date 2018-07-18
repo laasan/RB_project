@@ -6,6 +6,7 @@ import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -20,164 +21,181 @@ import javax.swing.*;
 
 public class XMLxls {
     public static void main(String[] args) throws ParseException {
-        String[] Args = new String[5];
-        Args = paramReader(Args);
-        //System.out.print(Args[0]+" "+Args[1]+" "+Args[2]+" "+Args[3]);
 
-        List<SEM21> semList = new ArrayList<>();
-        String newName;
-        //открытие\выбор XML файла
-        String fileName, filePath;
-        JFileChooser fileopen = new JFileChooser(Args[0]);//"C:\\");
+        int nextOrExit = JOptionPane.YES_OPTION;
+        while(nextOrExit==JOptionPane.YES_OPTION) {
+            String[] Args = new String[5];
+            Args = paramReader(Args);
+            //System.out.print(Args[0]+" "+Args[1]+" "+Args[2]+" "+Args[3]);
 
-        String DOC_DATE="",DOC_NO="",SENDER_ID="",DOC_TYPE_ID="";
-        String outP;
-        int ret = fileopen.showDialog(null, "Выбрать XML файл");
-        if (ret == JFileChooser.APPROVE_OPTION) {
-            File file = fileopen.getSelectedFile();
-            fileName = file.getName();
-            filePath = file.getPath();
+            List<SEM21> semList = new ArrayList<>();
+            String newName;
+            //открытие\выбор XML файла
+            String fileName, filePath;
+            JFileChooser fileopen = new JFileChooser(Args[0]);//"C:\\");
+
+            String DOC_DATE="",DOC_NO="",SENDER_ID="",DOC_TYPE_ID="";
+            String outP;
+
+            int ret = fileopen.showDialog(null, "Выбрать XML файл");
+            if (ret == JFileChooser.APPROVE_OPTION) {
+                File file = fileopen.getSelectedFile();
+                fileName = file.getName();
+                filePath = file.getPath();
 
 
-            if(isSEM21(fileName)||isSEM03(fileName)||isEQM06(fileName)){
-                newName = getNewName(fileName);
-                outP = outPath(Args,file);
+                if(isSEM21(fileName)||isSEM03(fileName)||isEQM06(fileName)){
+                    newName = getNewName(fileName);
+                    outP = outPath(Args,file);
                 /*
                 действия// начитка semList
                  */
 
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                try {
-                    DocumentBuilder builder = factory.newDocumentBuilder();
-                    Document doc = builder.parse(filePath);
+                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                    try {
+                        DocumentBuilder builder = factory.newDocumentBuilder();
+                        Document doc = builder.parse(filePath);
 
-                    //инфа в первую строку
-                    NodeList reqList = doc.getElementsByTagName("DOC_REQUISITES");
-                    Node doc_req = reqList.item(0);
-                    NamedNodeMap reqAttr = doc_req.getAttributes();
-                    DOC_DATE = reqAttr.item(0).getNodeValue();
-                    DOC_NO = reqAttr.item(1).getNodeValue();
-                    SENDER_ID = reqAttr.item(4).getNodeValue();
-                    DOC_TYPE_ID = reqAttr.item(2).getNodeValue();
+                        //инфа в первую строку
+                        NodeList reqList = doc.getElementsByTagName("DOC_REQUISITES");
+                        Node doc_req = reqList.item(0);
+                        NamedNodeMap reqAttr = doc_req.getAttributes();
+                        DOC_DATE = reqAttr.item(0).getNodeValue();
+                        DOC_NO = reqAttr.item(1).getNodeValue();
+                        SENDER_ID = reqAttr.item(4).getNodeValue();
+                        DOC_TYPE_ID = reqAttr.item(2).getNodeValue();
 
-                    //гон по RECORDS
-                    doc.getElementsByTagName("RECORDS");
-                    NodeList recordsList = doc.getElementsByTagName("RECORDS");
+                        //гон по RECORDS
+                        doc.getElementsByTagName("RECORDS");
+                        NodeList recordsList = doc.getElementsByTagName("RECORDS");
 
-                    for(int i=0;i<recordsList.getLength();i++){
-                        SEM21 sem = new SEM21();
+                        for(int i=0;i<recordsList.getLength();i++){
+                            SEM21 sem = new SEM21();
 
-                        Node record = recordsList.item(i);
-                        NamedNodeMap recordsAttr = record.getAttributes();
+                            Node record = recordsList.item(i);
+                            NamedNodeMap recordsAttr = record.getAttributes();
 
-                        Node security = record.getParentNode();
-                        NamedNodeMap secAttr = security.getAttributes();
+                            Node security = record.getParentNode();
+                            NamedNodeMap secAttr = security.getAttributes();
 
-                        fWriter(secAttr,sem,fileName);
-                        fWriter(recordsAttr,sem,fileName);
+                            fWriter(secAttr,sem,fileName);
+                            fWriter(recordsAttr,sem,fileName);
 
-                        levelUp(security,sem,fileName);
+                            levelUp(security,sem,fileName);
 /*
                 System.out.print(levelUp(security));
 */
-                        semList.add(sem);
+                            semList.add(sem);
+                        }
+
+                        //for(SEM21 s: semList)
+                        //    System.out.println(s.getsTime()+" "+s.getNN()+" "+s.getAccInt());
+
+                        if(fileName.contains("SEM03"))
+                            semList = sortByTime(semList); //если SEM03 сортируем его по времени
+                        //System.out.println();
+                        //for(SEM21 s: semList)
+                        //    System.out.println(s.getsTime()+" "+s.getNN() + " " + timeSec(s)+" "+s.getAccInt());
+
+                    } catch(ParserConfigurationException e){
+                        e.printStackTrace();
+                    } catch (SAXException e) {
+                        JOptionPane.showMessageDialog(null, "Внимание!!! SAXException - cообщите об этом инциденте разработчику.");
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        JOptionPane.showMessageDialog(null, "Внимание!!! IOException - cообщите об этом инциденте разработчику.");
+                        e.printStackTrace();
                     }
 
-                    //for(SEM21 s: semList)
-                    //    System.out.println(s.getsTime()+" "+s.getNN()+" "+s.getAccInt());
+                    // создание самого excel файла в памяти
+                    HSSFWorkbook workbook = new HSSFWorkbook();
+                    // создание листа с названием
+                    String nameList = newName;
+                    if(fileName.contains("SEM03")) nameList = "Ставки РЕПО";
+                    HSSFSheet sheet = workbook.createSheet(nameList);
 
-                    if(fileName.contains("SEM03"))
-                        semList = sortByTime(semList); //если SEM03 сортируем его по времени
-                    //System.out.println();
-                    //for(SEM21 s: semList)
-                    //    System.out.println(s.getsTime()+" "+s.getNN() + " " + timeSec(s)+" "+s.getAccInt());
+                    // счетчик для строк
+                    int rowNum = 0;
 
-                } catch(ParserConfigurationException e){
-                    e.printStackTrace();
-                } catch (SAXException e) {
-                    JOptionPane.showMessageDialog(null, "Внимание!!! SAXException - cообщите об этом инциденте разработчику.");
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    JOptionPane.showMessageDialog(null, "Внимание!!! IOException - cообщите об этом инциденте разработчику.");
-                    e.printStackTrace();
-                }
+                    //SimpleDateFormat для dateConvert(String s, SimpleDateFormat format)
+                    SimpleDateFormat sdf = new SimpleDateFormat(); //избыточно - избавься и перепиши
+                    sdf.applyPattern("dd.MM.yyyy");
 
-                // создание самого excel файла в памяти
-                HSSFWorkbook workbook = new HSSFWorkbook();
-                // создание листа с названием
-                String nameList = newName;
-                if(fileName.contains("SEM03")) nameList = "Ставки РЕПО";
-                HSSFSheet sheet = workbook.createSheet(nameList);
+                    //формат даты
+                    DataFormat format = sheet.getWorkbook().createDataFormat();
+                    CellStyle dateStyle = sheet.getWorkbook().createCellStyle();
+                    dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
 
-                // счетчик для строк
-                int rowNum = 0;
+                    //формат времени
+                    DataFormat formatTime = sheet.getWorkbook().createDataFormat();
+                    CellStyle timeStyle = sheet.getWorkbook().createCellStyle();
+                    timeStyle.setDataFormat(formatTime.getFormat("[$-F400]h:mm:ss\\ AM/PM"));
 
-                //SimpleDateFormat для dateConvert(String s, SimpleDateFormat format)
-                SimpleDateFormat sdf = new SimpleDateFormat(); //избыточно - избавься и перепиши
-                sdf.applyPattern("dd.MM.yyyy");
+                    // это будет первая строчка в листе Excel файла
 
-                //формат даты
-                DataFormat format = sheet.getWorkbook().createDataFormat();
-                CellStyle dateStyle = sheet.getWorkbook().createCellStyle();
-                dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
+                    if(!isEQM06(fileName)){  //кроме EQM06
+                        Row row = sheet.createRow(rowNum);
+                        row.createCell(0).setCellValue(dateConvert(DOC_DATE,sdf));row.getCell(0).setCellStyle(dateStyle);
+                        row.createCell(1).setCellValue(DOC_NO);
+                        row.createCell(2).setCellValue(SENDER_ID);
+                        row.createCell(3).setCellValue(DOC_TYPE_ID);
+                    }
+                    else rowNum = -1;//для EQM06 не нужна первая строка, далее делается createRow(++rowNum), первый ++rowNum => rowNum = 0(первая строка) для EQM06 и rowNum = 1(вторая строка) для не EQM06
 
-                //формат времени
-                DataFormat formatTime = sheet.getWorkbook().createDataFormat();
-                CellStyle timeStyle = sheet.getWorkbook().createCellStyle();
-                timeStyle.setDataFormat(formatTime.getFormat("h:mm:ss;@"));
-
-                // это будет первая строчка в листе Excel файла
-
-                if(!isEQM06(fileName)){  //кроме EQM06
-                    Row row = sheet.createRow(rowNum);
-                    row.createCell(0).setCellValue(dateConvert(DOC_DATE,sdf));row.getCell(0).setCellStyle(dateStyle);
-                    row.createCell(1).setCellValue(DOC_NO);
-                    row.createCell(2).setCellValue(SENDER_ID);
-                    row.createCell(3).setCellValue(DOC_TYPE_ID);
-                }
-                else rowNum = -1;//для EQM06 не нужна первая строка, далее делается createRow(++rowNum), первый ++rowNum => rowNum = 0(первая строка) для EQM06 и rowNum = 1(вторая строка) для не EQM06
-
-                // создаем подписи к столбцам
-                List<String> head;
-                if(fileName.contains("SEM21"))
-                    head = Arrays.asList("BoardId","BoardName","TradeDate","ShortName","SecurityId","Type","RegNumber","FaceValue","Volume","Value","CurrencyId","OpenPeriod","Open","Low","High","Close","LowOffer","HighBid","WAPrice","ClosePeriod","TrendClose","TrendWAP","Bid","Offer","Prev","YieldAtWAP","YieldClose","AccInt","MarketPrice","NumTrades","IssueSize","TrendClsPR","TrendWapPR","MatDate","MarketPrice2","AdmittedQuote","ListName","PrevLegalClosePrice","LegalOpenPrice","LegalClosePrice","OpenVal","CloseVal","EngBrdName","EngName","EngType","BoardType","Duration","MPValTrd","MP2ValTrd","AdmittedValue");
-                else if(fileName.contains("SEM03"))
-                    head = Arrays.asList("NN","TradeNo","BoardId","BoardName","TradeDate","SettleDate","ShortName","SecurityId","BuySell","OrderNo","sTime","TrdType","Price","Quantity","Value","AccInt","Amount","Commission","CurrencyId","TrdAccId","CPFirmId","CPTrdAccId","Yield","Period","SettleCode","BrokerRef","ExtRef","UserId","Price2","AccInt2","RepoRate","RepoPeriod","FirmId","RepoValue","Discount","UpperDiscount","LowerDiscount","MatchRef","ClientCode","Details","SubDetails","CpFirmINN","FaceValue","RefundRate");
-                //иначе по EQM06:
-                else head = Arrays.asList("NN","TradeNo","BoardId","BoardName","TradeDate","SettleDate","ShortName","SecurityId","BuySell","SettleCode","Price","Quantity","Value","ExchComm","ClrComm","ITSComm","CurrencyId","AccInt","TrdAccId","ClientCode","ClientDetails","CPFirmId","Price2","ReportNo","ReportTime","FirmId","InfType","RepoPeriod","RepoPart","Sum1","Sum2","Amount","Balance","Session","ClearingType","RprtComm");
-                Row row = sheet.createRow(++rowNum);
-                int count = 0;
-                for(String h :head){
-                    row.createCell(count).setCellValue(h);
-                    count++;
-                }
-
-                // заполняем лист данными
-                for (SEM21 l : semList) {
+                    // создаем подписи к столбцам
+                    List<String> head;
                     if(fileName.contains("SEM21"))
-                        createSheetHeader(sheet, ++rowNum, l, dateStyle, sdf);
+                        head = Arrays.asList("BoardId","BoardName","TradeDate","ShortName","SecurityId","Type","RegNumber","FaceValue","Volume","Value","CurrencyId","OpenPeriod","Open","Low","High","Close","LowOffer","HighBid","WAPrice","ClosePeriod","TrendClose","TrendWAP","Bid","Offer","Prev","YieldAtWAP","YieldClose","AccInt","MarketPrice","NumTrades","IssueSize","TrendClsPR","TrendWapPR","MatDate","MarketPrice2","AdmittedQuote","ListName","PrevLegalClosePrice","LegalOpenPrice","LegalClosePrice","OpenVal","CloseVal","EngBrdName","EngName","EngType","BoardType","Duration","MPValTrd","MP2ValTrd","AdmittedValue");
                     else if(fileName.contains("SEM03"))
-                        createSheetHeaderSEM03(sheet, ++rowNum, l, dateStyle, timeStyle, sdf);
-                    else createSheetHeaderEQM06(sheet, ++rowNum, l, dateStyle, timeStyle, sdf);
-                }
+                        head = Arrays.asList("NN","TradeNo","BoardId","BoardName","TradeDate","SettleDate","ShortName","SecurityId","BuySell","OrderNo","sTime","TrdType","Price","Quantity","Value","AccInt","Amount","Commission","CurrencyId","TrdAccId","CPFirmId","CPTrdAccId","Yield","Period","SettleCode","BrokerRef","ExtRef","UserId","Price2","AccInt2","RepoRate","RepoPeriod","FirmId","RepoValue","Discount","UpperDiscount","LowerDiscount","MatchRef","ClientCode","Details","SubDetails","CpFirmINN","FaceValue","RefundRate");
+                        //иначе по EQM06:
+                    else head = Arrays.asList("NN","TradeNo","BoardId","BoardName","TradeDate","SettleDate","ShortName","SecurityId","BuySell","SettleCode","Price","Quantity","Value","ExchComm","ClrComm","ITSComm","CurrencyId","AccInt","TrdAccId","ClientCode","ClientDetails","CPFirmId","Price2","ReportNo","ReportTime","FirmId","InfType","RepoPeriod","RepoPart","Sum1","Sum2","Amount","Balance","Session","ClearingType","RprtComm");
+                    Row row = sheet.createRow(++rowNum);
+                    int count = 0;
+                    for(String h :head){
+                        row.createCell(count).setCellValue(h);
+                        count++;
+                    }
 
-                for(int i = 0;i<head.size();i++)
-                    sheet.autoSizeColumn(i);
+                    // заполняем лист данными
+                    for (SEM21 l : semList) {
+                        if(fileName.contains("SEM21"))
+                            createSheetHeader(sheet, ++rowNum, l, dateStyle, sdf);
+                        else if(fileName.contains("SEM03"))
+                            createSheetHeaderSEM03(sheet, ++rowNum, l, dateStyle, timeStyle, sdf);
+                        else createSheetHeaderEQM06(sheet, ++rowNum, l, dateStyle, timeStyle, sdf);
+                    }
 
-                // записываем созданный в памяти Excel документ в файл
-                try (FileOutputStream out = new FileOutputStream(new File(outP + newName+".xls"))) {//"C:\\JavaProj\\BackOfXMLtoXLS\\"+newName+".xls"
-                    workbook.write(out);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    for(int i = 0;i<head.size();i++)
+                        sheet.autoSizeColumn(i);
+
+                    // записываем созданный в памяти Excel документ в файл
+                    try (FileOutputStream out = new FileOutputStream(new File(outP + newName+".xls"))) {//"C:\\JavaProj\\BackOfXMLtoXLS\\"+newName+".xls"
+                        workbook.write(out);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    //System.out.println("Excel файл успешно создан!");
                 }
-                //System.out.println("Excel файл успешно создан!");
+                else JOptionPane.showMessageDialog(null, "Попытка открыть неверный файл. Программа работает c XML для SEM21, SEM21A, SEM03, EQM06");
+                //System.out.println("Обработать неверный выбор файла. ");
+
             }
-            else JOptionPane.showMessageDialog(null, "Попытка открыть неверный файл. Программа работает c XML для SEM21, SEM21A, SEM03, EQM06");
-            //System.out.println("Обработать неверный выбор файла. ");
+            else JOptionPane.showMessageDialog(null, "Файл не выбран.");
+            //System.out.println("обработать вариант отказа выбора файла вроде Файл не выбран, программа закрыта.");
+
+            nextOrExit = JOptionPane.showOptionDialog(
+                    null,
+                    "Можно нажать \"Следующий файл\" и продолжить обработку другого файла.",
+                    "Выйти или продолжить?",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    new Object[]{"Следующий файл","Выйти"},
+                    "Выйти");
+
 
         }
-        else JOptionPane.showMessageDialog(null, "Файл не выбран.");
-        //System.out.println("обработать вариант отказа выбора файла вроде Файл не выбран, программа закрыта.");
 
 
         JOptionPane.showMessageDialog(null, "Работа с программой завершена");
@@ -235,6 +253,7 @@ public class XMLxls {
 
     public static Integer timeSec(SEM21 s){
         String[] parts = s.getsTime().split(":");
+        //System.out.println(parts[0]+" "+parts[1]+" "+parts[2]);
         return Integer.parseInt(parts[0])*60*60+Integer.parseInt(parts[1])*60+Integer.parseInt(parts[2]);
     }
 
@@ -646,30 +665,55 @@ public class XMLxls {
         row.createCell(30).setCellValue(Double.parseDouble(s.getSum2()));
         row.createCell(31).setCellValue(Double.parseDouble(s.getAmount()));
         row.createCell(32).setCellValue(Double.parseDouble(s.getBalance()));
-        row.createCell(33).setCellValue(s.getSession());
+        if(!s.getReportTime().equals("")) row.createCell(33).setCellValue(Integer.parseInt(s.getSession()));
+        else row.createCell(33).setCellValue("");
         row.createCell(34).setCellValue(s.getClearingType());
         row.createCell(35).setCellValue(s.getRprtComm());
 
     }
 
-    public static Date timeMaker(String str){
-        SimpleDateFormat parser = new SimpleDateFormat("HH:mm:ss");
+    public static float timeMaker(String str) {
+
+        String[] time = str.split(":");
+
+        int h = Integer.parseInt(time[0]);
+        int m = Integer.parseInt(time[1]);
+        int s = Integer.parseInt(time[2]);
+        //System.out.println(str + " " + h + " " + m + " " + s + " return: "+ ((float) (h*60*60 + m*60 + s))/86400);
+        return ((float) (h*60*60 + m*60 + s))/86400;
+
+        /*
+        DateFormat formatSDF = new SimpleDateFormat("HH:mm:ss");
         Date time1 = null;
         try {
-            time1 = parser.parse(str);
+            time1 = formatSDF.parse(str);
+
         } catch (ParseException e) {
             JOptionPane.showMessageDialog(null, "Внимание!!! Произошла ошибка конвертации времени. Обратитесь к разработчику.");
         }
+
+        if (time1 != null) {
+            System.out.println(time1.getTime());
+        }
+        else time1.setTime(0);
+
+
+
         Calendar cal = Calendar.getInstance();
         if (time1 != null) {
             cal.setTime(time1);
-            return cal.getTime();
+            System.out.println(cal.getTime().getTime());
+            return cal.getTime().getTime();
         }
         else {
             Date errorTime = cal.getTime(); //момент сейчас, как я понимаю
             JOptionPane.showMessageDialog(null, "Внимание!!! Позорная ошибка! В коде не прописан обход null для какой-то из колонок времени. Обратитесь к разработчику. Закройте программу через Ctrl+Alt+Del.");
-            return errorTime;//время ошибки
+            return errorTime.getTime();//время ошибки
             //заменить это всё выбрасыванием Exception
         }
+
+
+        return cal.getTime().getTime();
+        */
     }
 }
