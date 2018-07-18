@@ -11,6 +11,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.swing.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -18,6 +19,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.*;
+
+import static javafx.scene.input.KeyCode.L;
 
 public class FolderMonitor440P extends Application {
 
@@ -111,10 +114,28 @@ public class FolderMonitor440P extends Application {
                     else
                         AlertWindow.display("Ошибка!","Не выбрана строка.");
                 }
+                case L: {
+                    ObservableList<Folder> selected;
+                    selected = tbl.getSelectionModel().getSelectedItems();
+                    String name = selected.get(0).getName();
+                    JFileChooser fileopen = new JFileChooser(path+"/"+name);//"C:\\");
+
+                    int ret = fileopen.showDialog(null, "Посмотреть содержимое");
+                    if (ret == JFileChooser.APPROVE_OPTION) {
+                        File fileView = fileopen.getSelectedFile();
+                        try {
+                            ProcessBuilder pb = new ProcessBuilder("C:\\Program Files\\Internet Explorer\\iexplore.exe", fileView.getPath());
+                            pb.start();
+                        } catch (IOException e) {
+                            AlertWindow.display("Ошибка","Ошибка открытия файла. Сообщите разработчику.\r\nОжидаемый путь iexplorer: C:\\Program Files\\Internet Explorer\\iexplore.exe");
+                        }
+                    }
+                }
             }
         });
 
-        Label lbl = new Label("для переименования в архивную, выберите строку и нажмите клавишу \"A\"(она же русская \"Ф\") на клавиатуре");
+        Label lbl = new Label("действия через клавиатуру:\r\nArchiv: для переименования в архивную, выберите строку и нажмите клавишу \"A\"(она же русская \"Ф\")\r\nLook: для просмотра содержимого папки и содержимого файлов нажмите клавишу \"L\"(она же русская \"Д\")");
+        lbl.setMinHeight(50);
         HBox hBox = new HBox(100);
         hBox.getChildren().addAll(button,checkBox,lbl);
 
@@ -355,8 +376,4 @@ public class FolderMonitor440P extends Application {
             return name.toLowerCase().contains(word) && name.toLowerCase().endsWith(extention);
         }
     }
-
-
-
-
 }
