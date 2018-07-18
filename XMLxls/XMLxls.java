@@ -124,7 +124,7 @@ public class XMLxls {
                     //формат даты
                     DataFormat format = sheet.getWorkbook().createDataFormat();
                     CellStyle dateStyle = sheet.getWorkbook().createCellStyle();
-                    dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
+                    dateStyle.setDataFormat(format.getFormat("m/d/yy"));//это стиль эксель клетки poi, а выводится всёравно dd.MM.yyyy
 
                     //формат времени
                     DataFormat formatTime = sheet.getWorkbook().createDataFormat();
@@ -654,8 +654,11 @@ public class XMLxls {
         row.createCell(21).setCellValue(s.getCPFirmId());
         row.createCell(22).setCellValue(Double.parseDouble(s.getPrice2()));
         row.createCell(23).setCellValue(Double.parseDouble(s.getReportNo()));
-        if(!s.getReportTime().equals("")){row.createCell(24).setCellValue(timeMaker(s.getReportTime()));row.getCell(24).setCellStyle(dataStyleTime);}
+
+        if(!s.getReportTime().equals(""))row.createCell(24).setCellValue(timeMaker(s.getReportTime()));
         else row.createCell(24).setCellValue("");
+        row.getCell(24).setCellStyle(dataStyleTime);
+
         row.createCell(25).setCellValue(s.getFirmId());
         row.createCell(26).setCellValue(Double.parseDouble(s.getInfType()));
         row.createCell(27).setCellValue(Double.parseDouble(s.getRepoPeriod()));
