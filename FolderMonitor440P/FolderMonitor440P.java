@@ -5,8 +5,6 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.w3c.dom.Document;
@@ -16,15 +14,10 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.beans.EventHandler;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.text.SimpleDateFormat;
 import java.util.*;
-
 
 public class FolderMonitor440P extends Application {
 
@@ -33,13 +26,20 @@ public class FolderMonitor440P extends Application {
     private Button button;
     private CheckBox checkBox = new CheckBox("Отображать с архивными");
 
-    //private String path = "G:\\OTCH_CB\\440-П\\testFold\\testForMonitor440\\rum";
+    //private static String path = "G:\\OTCH_CB\\440-П\\testFold\\testForMonitor440\\rum";
     //String path = "C:\\JavaProj\\FolderSort440P\\testFold\\sorted\\jey";//"E:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
     private static String path = "D:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
-    //static String log = path + "\\logMonitor440P";
+    static String log = path + "\\logMonitor440P"; //если сделать private, то RenameDir не возьмёт, по дефолту он package-private
 
     public static void main(String[] args){
-        launch(args);
+       // try{
+            LogWriter.write(log,GetDayTime.now()+" ВХОД в программу");
+            launch(args);
+        /*
+        } catch (IllegalStateException ex){
+            AlertWindow.display("Ошибка","Ошибка на входе в программу. Error 3.");
+        }
+        */
     }
 
     @Override
@@ -175,7 +175,8 @@ public class FolderMonitor440P extends Application {
     }
 
     private void closeProgram(){
-        System.out.println("Program is closed.");
+        //System.out.println("Program is closed.");
+        LogWriter.write(log,GetDayTime.now()+" ВЫХОД из программы");
     }
 
     private String kwtAnalizer(String path, String folder, String content){

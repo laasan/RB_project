@@ -8,8 +8,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class YesNoAlertWindow {
-    public static boolean display(String title, String msg){
+class YesNoAlertWindow {
+    static boolean display(String title, String msg){
         Stage window = new Stage();
         final Boolean[] answ = {false};
 

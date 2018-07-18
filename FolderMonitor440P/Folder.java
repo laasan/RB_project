@@ -54,17 +54,23 @@ public class Folder implements Comparable<Folder>{
         this.filesSymb = filesSymb;
     }
 
+    static class Comparators {//через лямбду
+        static Comparator<Folder> STATE = (f1, f2) -> f1.getState().compareTo(f2.getState());
+    }
+
     @Override
     public int compareTo(Folder f) {
         return Comparators.STATE.compare(this, f);
     }
 
-    public static class Comparators {
-        public static Comparator<Folder> STATE = new Comparator<Folder>() {
+    /*
+        static class Comparators { //через Comparator.comparing
+        static Comparator<Folder> STATE = new Comparator<Folder>() {
             @Override
             public int compare(Folder f1, Folder f2) {
                 return f1.getState().compareTo(f2.getState());
             }
         };
     }
+    */
 }
