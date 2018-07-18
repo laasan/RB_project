@@ -21,10 +21,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 
 public class FolderMonitor440P extends Application {
@@ -91,7 +88,7 @@ public class FolderMonitor440P extends Application {
                         st = selected.get(0).getState();
 
                         if(!name.substring(0,1).equals("_")){//если не архивный
-                            if(st.equals("ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ")){//если нет предупреждений кроме "ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ"
+                            if(st.equals(" _ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ")){//если нет предупреждений кроме "ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ"
                                 selected.get(0).setName("_" + name);
                                 RenameDir.rename(path+"/"+name,"_" + name);
                                 //System.out.println(selected.get(0).getName());
@@ -176,7 +173,9 @@ public class FolderMonitor440P extends Application {
                 folders.add(new Folder(f.get(i),tmpDate,prim,content));
             }
         }
-        //Collections.sort(tempList);
+
+        Collections.sort(folders, Folder.Comparators.STATE);
+
         return folders;
     }
 
@@ -272,7 +271,7 @@ public class FolderMonitor440P extends Application {
         else
             System.out.println("Есть папки не содержащие xml");
 
-        if(str.equals("")) str = "ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ";
+        if(str.equals("")) str = " _ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ";
 
         return str;
     }

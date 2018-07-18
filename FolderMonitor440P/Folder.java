@@ -1,9 +1,12 @@
-public class Folder {
+import java.util.Comparator;
+
+public class Folder implements Comparable<Folder>{
 
     private String name;
     private String dateStart;
     private String state;
     private String filesSymb;
+
 
     public Folder(){
         this.name = "";
@@ -49,5 +52,19 @@ public class Folder {
 
     public void setFilesSymb(String filesSymb) {
         this.filesSymb = filesSymb;
+    }
+
+    @Override
+    public int compareTo(Folder f) {
+        return Comparators.STATE.compare(this, f);
+    }
+
+    public static class Comparators {
+        public static Comparator<Folder> STATE = new Comparator<Folder>() {
+            @Override
+            public int compare(Folder f1, Folder f2) {
+                return f1.getState().compareTo(f2.getState());
+            }
+        };
     }
 }
