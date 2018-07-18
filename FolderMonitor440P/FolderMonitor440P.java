@@ -1,5 +1,8 @@
-import javafx.application.Application;
+﻿import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -31,7 +34,8 @@ public class FolderMonitor440P extends Application {
     //private static String path = "G:\\OTCH_CB\\440-П\\jey";
     //private static String path = "G:\\OTCH_CB\\440-П\\kramar";
     //private static String path = "G:\\OTCH_CB\\440-П\\rum";
-    static String path = "D:\\JavaProj\\FolderSort440P\\testFold\\sorted\\jey";
+    static String path = "D:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
+    //static String path = "G:\\OTCH_CB\\440-П\\testFold\\testMolodensky\\jey";
     //private static String path = "G:\\OTCH_CB\\440-П\\rum";
     //private static String path = "D:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
     static String log = ""; //если сделать private, то RenameDir не возьмёт, по дефолту он package-private
@@ -62,7 +66,7 @@ public class FolderMonitor440P extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         window = primaryStage;
-        window.setTitle("FolderMon440P 2.1 (помощник мониторинга папки: "+path+" )");
+        window.setTitle("FolderMon440P 2.4 (помощник мониторинга папки: "+path+" )");
         window.setOnCloseRequest(e -> closeProgram());
         window.setHeight(600);
 
@@ -198,9 +202,19 @@ public class FolderMonitor440P extends Application {
         Label lbl = new Label("действия через клавиатуру:\r\nArchiv: для переименования в архивную, выберите одну или несколько строк и нажмите клавишу \"A\"(она же русская \"Ф\")\r\nLook: для просмотра содержимого папки и содержимого её файлов, выберите строку и нажмите клавишу \"L\"(она же русская \"Д\")");
         if(!archAvailable)
             lbl.setText("действия через клавиатуру:\r\nArchiv: недоступно (сокращённая версия)\r\nLook: для просмотра содержимого папки и содержимого её файлов, выберите строку и нажмите клавишу \"L\"(она же русская \"Д\")");
+
+        Label lblSelect = new Label("Выбрано: 0");
+        tbl.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            int sel = tbl.getSelectionModel().getSelectedItems().size();
+            lblSelect.setText("Выбрано: " + sel/*+" "+oldValue+" "+newValue+" "+observable.getValue()*/);
+            //если выбирать мышом, возможен глюк, т.к. деселектный остаётся выбран(это можно объяснить: деселектный остаётся выбран, надо перещёлкунуть деселект\селект другой остающийся)
+        });
+        VBox vBoxSmall = new VBox(10);
+        vBoxSmall.getChildren().addAll(checkBox,lblSelect);
+
         lbl.setMinHeight(50);
         HBox hBox = new HBox(50);
-        hBox.getChildren().addAll(button,checkBox,lbl);
+        hBox.getChildren().addAll(button,vBoxSmall,lbl);
 
         VBox vBox = new VBox(10);
         vBox.getChildren().addAll(hBox,tbl);
@@ -328,8 +342,13 @@ public class FolderMonitor440P extends Application {
         }
         //System.out.println(notPbAnswExistance+" "+folder);
         for (String s: cnt) cnt[0] = cnt[0] + s; //будет "" если нашлись все соответствия
+
+
+        //System.out.println(content+" "+ content=="ROO; ");
         //System.out.println("|"+cnt[0]+"|");
-        if(!cnt[0].equals("")||start.equals("")||!notPbAnswExistance)//не "очистилось" cnt или нет стартового запроса или нет не-PBшного ответа(должен быть всегда?)
+        if(content.contains("ROO")&&content.contains("PB"))notPbAnswExistance = true; //заплатка чтобы по ROO не обращалось внимания на отсутствие не-PB ответа, проверка на PB нужна чтобы одиночный ROO не метился КОРРЕКТНЫМ
+        if(content.contains("RPO")&&content.contains("PB2"))notPbAnswExistance = true; //заплатка чтобы по RPO при наличии PB2 не обращалось внимания на отсутствие не-PB ответа
+        if(!cnt[0].equals("")||start.equals("")||!notPbAnswExistance)//не "очистилось" cnt или нет стартового запроса или нет не-PBшного ответа(должен быть всегда? нет - решаем заплатками см.строки выше)
             str = str + " Возможна нехватка файлов - проверяйте.";
 
         File[] listAllFiles = file.listFiles(new MyFileNameFilter(".xml",""));
