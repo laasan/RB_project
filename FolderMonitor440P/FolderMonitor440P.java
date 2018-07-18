@@ -336,7 +336,7 @@ public class FolderMonitor440P extends Application {
                 fldrName = folder.toLowerCase();
                 if(fldrName.substring(0,1).equals("_"))
                     fldrName = fldrName.substring(1); //убираем архивное подчеркивание если есть
-                fldrName = fldrName.substring(folder.indexOf("_")+1);//теперь убираем начальную дату папки
+                fldrName = fldrName.substring(fldrName.indexOf("_")+1);//теперь убираем начальную дату папки
                 if(!f.getName().toLowerCase().contains(fldrName))
                 {
                     str = "Лишние файлы - проверяйте." + str;
