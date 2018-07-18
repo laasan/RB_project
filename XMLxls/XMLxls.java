@@ -1,4 +1,4 @@
-﻿import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 
@@ -148,12 +148,16 @@ public class XMLxls {
                 dataStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
 
                 // это будет первая строчка в листе Excel файла
-                Row row = sheet.createRow(rowNum);
-                row.createCell(0).setCellValue(dateConvert(DOC_DATE));row.getCell(0).setCellStyle(dataStyle);
-                row.createCell(1).setCellValue(DOC_NO);
-                row.createCell(2).setCellValue(SENDER_ID);
-                row.createCell(3).setCellValue(DOC_TYPE_ID);
-                
+
+                if(!fileNameCheckEQM06(fileName)){  //кроме EQM06
+                    Row row = sheet.createRow(rowNum);
+                    row.createCell(0).setCellValue(dateConvert(DOC_DATE));row.getCell(0).setCellStyle(dataStyle);
+                    row.createCell(1).setCellValue(DOC_NO);
+                    row.createCell(2).setCellValue(SENDER_ID);
+                    row.createCell(3).setCellValue(DOC_TYPE_ID);
+                }
+                else rowNum = -1;//для EQM06 не нужна первая строка, далее делается createRow(++rowNum), первый ++rowNum => rowNum = 0(первая строка) для EQM06 и rowNum = 1(вторая строка) для не EQM06
+
                 // создаем подписи к столбцам
                 List<String> head;
                 if(fileName.contains("SEM21"))
