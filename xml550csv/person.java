@@ -1,13 +1,27 @@
 public class person {
     String   NoteId      //идентификатор записи
-            ,ClientType  //тип клиента 1-5
-            ,Fio         //фамили имя потчество одной строкой
-            ,Inn         //ИНН
-            ,PolnNaim    //ПолнНаимИНБОЮЛ и НаимЮЛ
-            ,Razdel      //раздел: 11,12,2 соответственно для Раздел1.1,Раздел1.2,Раздел2
-            ,UchStatus   //статус участника для Раздел2
-            ,DocumentNum // Серия+Номер паспорта (для начала)
-            ,SourceFileName //файл из которого его достали
+            ;
+    String ClientType  //тип клиента 1-5
+            ;
+    String Fio         //фамили имя потчество одной строкой
+            ;
+    String Inn         //ИНН
+            ;
+    String PolnNaim    //ПолнНаимИНБОЮЛ и НаимЮЛ
+            ;
+    String Razdel      //раздел: 11,12,2 соответственно для Раздел1.1,Раздел1.2,Раздел2
+            ;
+    String UchStatus   //статус участника для Раздел2
+            ;
+    String DocumentNum // Серия+Номер паспорта (для начала)
+            ;
+    String SourceFileName //файл из которого его достали
+            ;
+    String CodeOtkaz   //код отказа
+            ;
+    String DateOtkaz   //дата отказа
+            ;
+    String Birthday    //день рождения физ.лица
             ;
 
     public String getNoteId() {
@@ -90,4 +104,25 @@ public class person {
     public void setSourceFileName(String sourceFileName) {
         SourceFileName = sourceFileName;
     }
+
+    public String getCodeOtkaz() {
+        if(this.CodeOtkaz != null) return CodeOtkaz;
+        else return "";
+    }
+
+    public void setCodeOtkaz(String codeOtkaz) { CodeOtkaz = codeOtkaz; }
+
+    public String getDateOtkaz() {
+        if(this.DateOtkaz != null) return DateOtkaz;
+        else return "";
+    }
+
+    public void setDateOtkaz(String dateOtkaz) { DateOtkaz = dateOtkaz; }
+
+    public String getBirthday() {
+        if(this.Birthday != null) return Birthday;
+        else return "";
+    }
+
+    public void setBirthday(String birthday) { Birthday = birthday; }
 }

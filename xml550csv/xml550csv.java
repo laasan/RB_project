@@ -63,6 +63,8 @@ public class xml550csv {
                     //tempPerson = new person();                     //для учёта нескольких участников создание new person в ноде про участников
                     //tempPerson.setRazdel("2");
                     String tempNodeId = "";
+                    String tempCodeOtkaz = "";
+                    String tempDateOtkaz = "";
 
                     if (nodeList.item(i).getNodeType() == Node.ELEMENT_NODE){
                         NodeList nodeList1 = nodeList.item(i).getChildNodes();
@@ -73,6 +75,14 @@ public class xml550csv {
                                     //System.out.println(node1.getTextContent());
                                     //tempPerson.setNoteId(node1.getTextContent());
                                     tempNodeId = node1.getTextContent();
+                                }
+                                if (node1.getNodeName().equals("СведОперация")){
+                                    NodeList svedOperNodeList = node1.getChildNodes();
+                                    for(int k = 0; k < svedOperNodeList.getLength(); k++){
+                                        Node node = svedOperNodeList.item(k);
+                                        if(node.getNodeName().equals("КодОтказа")) tempCodeOtkaz = node.getTextContent();
+                                        if(node.getNodeName().equals("ДатаОтказа")) tempDateOtkaz = node.getTextContent();
+                                    }
                                 }
                                 if (node1.getNodeName().equals("Участник")){
 
@@ -85,6 +95,9 @@ public class xml550csv {
                                         Node node = nodeListUch.item(m);
                                         if (node.getNodeName().equals("СтатусУчастника")) tempPerson.setUchStatus(node.getTextContent());
                                         if (node.getNodeName().equals("ТипУчастника")) tempPerson.setClientType(node.getTextContent());
+
+                                        tempPerson.setCodeOtkaz(tempCodeOtkaz); //сюда помещено чтобы прописывалось по каждому участнику групповой  ситуации
+                                        tempPerson.setDateOtkaz(tempDateOtkaz); //сюда помещено чтобы прописывалось по каждому участнику групповой  ситуации
 
                                         personAdd(node,tempPerson,personList);
                                     }
@@ -118,6 +131,20 @@ public class xml550csv {
                 if(node1.getNodeType()==Node.ELEMENT_NODE){
                     if(node1.getNodeName().equals("НомерЗаписи"))tempPerson.setNoteId(node1.getTextContent());
                     if(node1.getNodeName().equals(ClyentTypeTag))tempPerson.setClientType(node1.getTextContent());
+                    if(razdel.equals("11")){
+                        if(node1.getNodeName().equals("КодОтказа"))tempPerson.setCodeOtkaz(node1.getTextContent());
+                        if(node1.getNodeName().equals("ДатаОтказа"))tempPerson.setDateOtkaz(node1.getTextContent());
+                    }
+                    else if(razdel.equals("12")){
+                        if (node1.getNodeName().equals("СведОперация")){
+                            NodeList svedOperNodeList = node1.getChildNodes();
+                            for(int k = 0; k < svedOperNodeList.getLength(); k++){
+                                Node node = svedOperNodeList.item(k);
+                                if(node.getNodeName().equals("КодОтказа")) tempPerson.setCodeOtkaz(node.getTextContent());
+                                if(node.getNodeName().equals("ДатаОтказа")) tempPerson.setDateOtkaz(node.getTextContent());
+                            }
+                        }
+                    }
 
                     personAdd(node1,tempPerson,personList);
 
@@ -164,6 +191,7 @@ public class xml550csv {
                     }
                     tempPerson.setDocumentNum(tempDocNum);
                 }
+                if(node2.getNodeName().equals("ДатаРождения"))tempPerson.setBirthday(node2.getTextContent());
             }
         }
         tempPerson.setSourceFileName(fileName);
@@ -199,7 +227,7 @@ public class xml550csv {
 
     public static void CSVgen(List<person> personList,String fileName,boolean newOut){
         //newOut = true - создание нового файла на выходе, false - допись в all550.xls
-        String HEADER = "NoteId;ClientType;Fio;Inn;PolnNaim;Razdel;UchStatus;DocumentNum;SourceFileName";
+        String HEADER = "NoteId;ClientType;Fio;Inn;PolnNaim;Razdel;UchStatus;DocumentNum;SourceFileName;CodeOtkaz;DateOtkaz;Birthday";
         String DELIMITER = ";";
         String NEW_LINE_SEPARATOR="\r\n";
         try {
@@ -229,6 +257,12 @@ public class xml550csv {
                 fileWriter.append(p.getDocumentNum());
                 fileWriter.append(DELIMITER);
                 fileWriter.append(p.getSourceFileName());
+                fileWriter.append(DELIMITER);
+                fileWriter.append(p.getCodeOtkaz());
+                fileWriter.append(DELIMITER);
+                fileWriter.append(p.getDateOtkaz());
+                fileWriter.append(DELIMITER);
+                fileWriter.append(p.getBirthday());
             }
             fileWriter.flush();
             fileWriter.close();
