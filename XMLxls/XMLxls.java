@@ -39,7 +39,7 @@ public class XMLxls {
             filePath = file.getPath();
 
 
-            if(fileNameCheckSEM21(fileName)||fileNameCheckSEM03(fileName)||fileNameCheckEQM06(fileName)){
+            if(isSEM21(fileName)||isSEM03(fileName)||isEQM06(fileName)){
                 newName = getNewName(fileName);
                 outP = outPath(Args,file);
                 /*
@@ -64,14 +64,6 @@ public class XMLxls {
                     doc.getElementsByTagName("RECORDS");
                     NodeList recordsList = doc.getElementsByTagName("RECORDS");
 
-
-                    //if(fileName.contains("SEM21")){
-                    //    SEM21 sem = new SEM21();
-                    //}
-                    //else{
-                    //    SEM03 sem = new SEM03();
-                    //}
-
                     for(int i=0;i<recordsList.getLength();i++){
                         SEM21 sem = new SEM21();
 
@@ -80,27 +72,7 @@ public class XMLxls {
 
                         Node security = record.getParentNode();
                         NamedNodeMap secAttr = security.getAttributes();
-                        /*
-                        for(int k=0;k<secAttr.getLength();k++) {
-                            //System.out.print(secAttr.item(k).getNodeName() + "=" + secAttr.item(k).getNodeValue() + " ");
-                            if(fileName.contains("SEM21"))
-                                infWriterSEM21(sem,secAttr.item(k).getNodeName(),secAttr.item(k).getNodeValue());
-                            else if(fileName.contains("SEM03"))
-                                infWriterSEM03(sem,secAttr.item(k).getNodeName(),secAttr.item(k).getNodeValue());
-                            else //EQM06
-                                infWriterEQM06(sem,secAttr.item(k).getNodeName(),secAttr.item(k).getNodeValue());
-                        }
 
-                        for(int k=0;k<recordsAttr.getLength();k++) {
-                            //System.out.print(recordsAttr.item(k).getNodeName() + "=" + recordsAttr.item(k).getNodeValue() + " ");
-                            if(fileName.contains("SEM21"))
-                                infWriterSEM21(sem,recordsAttr.item(k).getNodeName(),recordsAttr.item(k).getNodeValue());
-                            else if(fileName.contains("SEM03"))
-                                infWriterSEM03(sem,recordsAttr.item(k).getNodeName(),recordsAttr.item(k).getNodeValue());
-                            else //EQM06
-                                infWriterEQM06(sem,recordsAttr.item(k).getNodeName(),recordsAttr.item(k).getNodeValue());
-                        }
-                        */
                         fWriter(secAttr,sem,fileName);
                         fWriter(recordsAttr,sem,fileName);
 
@@ -108,9 +80,7 @@ public class XMLxls {
 /*
                 System.out.print(levelUp(security));
 */
-                        //System.out.println();
                         semList.add(sem);
-
                     }
 
                     //for(SEM21 s: semList)
@@ -142,16 +112,25 @@ public class XMLxls {
                 // счетчик для строк
                 int rowNum = 0;
 
+                //SimpleDateFormat для dateConvert(String s, SimpleDateFormat format)
+                SimpleDateFormat sdf = new SimpleDateFormat(); //избыточно - избавься и перепиши
+                sdf.applyPattern("dd.MM.yyyy");
+
                 //формат даты
                 DataFormat format = sheet.getWorkbook().createDataFormat();
-                CellStyle dataStyle = sheet.getWorkbook().createCellStyle();
-                dataStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
+                CellStyle dateStyle = sheet.getWorkbook().createCellStyle();
+                dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
+
+                //формат времени
+                DataFormat formatTime = sheet.getWorkbook().createDataFormat();
+                CellStyle timeStyle = sheet.getWorkbook().createCellStyle();
+                timeStyle.setDataFormat(formatTime.getFormat("h:mm:ss;@"));
 
                 // это будет первая строчка в листе Excel файла
 
-                if(!fileNameCheckEQM06(fileName)){  //кроме EQM06
+                if(!isEQM06(fileName)){  //кроме EQM06
                     Row row = sheet.createRow(rowNum);
-                    row.createCell(0).setCellValue(dateConvert(DOC_DATE));row.getCell(0).setCellStyle(dataStyle);
+                    row.createCell(0).setCellValue(dateConvert(DOC_DATE,sdf));row.getCell(0).setCellStyle(dateStyle);
                     row.createCell(1).setCellValue(DOC_NO);
                     row.createCell(2).setCellValue(SENDER_ID);
                     row.createCell(3).setCellValue(DOC_TYPE_ID);
@@ -176,10 +155,10 @@ public class XMLxls {
                 // заполняем лист данными
                 for (SEM21 l : semList) {
                     if(fileName.contains("SEM21"))
-                        createSheetHeader(sheet, ++rowNum, l);
+                        createSheetHeader(sheet, ++rowNum, l, dateStyle, sdf);
                     else if(fileName.contains("SEM03"))
-                        createSheetHeaderSEM03(sheet, ++rowNum, l);
-                    else createSheetHeaderEQM06(sheet, ++rowNum, l);
+                        createSheetHeaderSEM03(sheet, ++rowNum, l, dateStyle, timeStyle, sdf);
+                    else createSheetHeaderEQM06(sheet, ++rowNum, l, dateStyle, timeStyle, sdf);
                 }
 
                 for(int i = 0;i<head.size();i++)
@@ -205,7 +184,7 @@ public class XMLxls {
 
     }
 
-    public static List<SEM21> sortByTime(List<SEM21> l){
+    public static List<SEM21> sortByTime(List<SEM21> l){ //переделать сортировку!!!
         List<Integer> timeList = new ArrayList<>();
         for(SEM21 s : l) timeList.add(timeSec(s));
         Collections.sort(timeList);
@@ -232,7 +211,6 @@ public class XMLxls {
     //во избежание дубляжа кода
     public static void fWriter(NamedNodeMap nodeAttr,SEM21 s,String fn){
         for(int k=0;k<nodeAttr.getLength();k++) {
-            //str = str + nodeAttr.item(k).getNodeName() + "=" + nodeAttr.item(k).getNodeValue() + " ";
             if(fn.contains("SEM21"))
                 infWriterSEM21(s,nodeAttr.item(k).getNodeName(),nodeAttr.item(k).getNodeValue());
             else if(fn.contains("SEM03"))
@@ -245,7 +223,6 @@ public class XMLxls {
 
     //класс для лазания по SEM21
     public static void levelUp(Node child,SEM21 s,String fn){
-        //String str = "";
         Node node;
         NamedNodeMap nodeAttr;
         while (!child.getNodeName().equals("MICEX_DOC")){
@@ -254,8 +231,7 @@ public class XMLxls {
             fWriter(nodeAttr,s,fn);
             child = node;
         }
-        //return str;
-    }
+   }
 
     public static Integer timeSec(SEM21 s){
         String[] parts = s.getsTime().split(":");
@@ -263,17 +239,17 @@ public class XMLxls {
     }
 
     //класс проверки имени файла SEM21
-    public static boolean fileNameCheckSEM21(String fileN){
+    public static boolean isSEM21(String fileN){
         return (fileN.contains("SEM21") || fileN.contains("SEM03")) && fileN.toLowerCase().contains(".xml");
     }
 
     //класс проверки имени файла SEM03
-    public static boolean fileNameCheckSEM03(String fileN){
+    public static boolean isSEM03(String fileN){
         return fileN.contains("SEM03") && fileN.toLowerCase().contains(".xml");
     }
 
     //класс проверки имени файла EQM06
-    public static boolean fileNameCheckEQM06(String fileN){
+    public static boolean isEQM06(String fileN){
         return fileN.contains("EQM06") && fileN.toLowerCase().contains(".xml");
     }
 
@@ -300,9 +276,7 @@ public class XMLxls {
     * строковые данные в них превращались экселем в данные типа ячейки, т.е. Дата)
     * при некорректном формате даты быдет возвращено 01.01.1900 и сообщение "Внимание!!! Произошла ошибка..."
     */
-    public static Date dateConvert(String s) {
-        SimpleDateFormat format = new SimpleDateFormat();
-        format.applyPattern("dd.MM.yyyy");
+    public static Date dateConvert(String s, SimpleDateFormat format) {   //переписать!!!
         String[] a = s.split("-");
         if(a.length==3)
             s = a[2]+"."+a[1]+"."+a[0];
@@ -420,7 +394,6 @@ public class XMLxls {
 
         if(nodeName.equals("RecNo")) s.setNN(nodeValue);
         if(nodeName.equals("TradeNo")) s.setTradeNo(nodeValue);
-
         if(nodeName.equals("BoardId")) s.setBoardId(nodeValue);
 
         if(nodeName.equals("BoardName")) s.setBoardName(nodeValue);
@@ -516,17 +489,12 @@ public class XMLxls {
 
     // заполнение строки (rowNum) определенного листа (sheet)
     // данными  из созданного в памяти Excel файла
-    private static void createSheetHeader(HSSFSheet sheet, int rowNum, SEM21 s) {
+    private static void createSheetHeader(HSSFSheet sheet, int rowNum, SEM21 s, CellStyle dateSt, SimpleDateFormat f) {
         Row row = sheet.createRow(rowNum);
-
-        //формат даты
-        DataFormat format = sheet.getWorkbook().createDataFormat();
-        CellStyle dataStyle = sheet.getWorkbook().createCellStyle();
-        dataStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
 
         row.createCell(0).setCellValue(s.getBoardId());
         row.createCell(1).setCellValue(s.getBoardName());
-        row.createCell(2).setCellValue(dateConvert(s.getTradeDate()));row.getCell(2).setCellStyle(dataStyle);
+        row.createCell(2).setCellValue(dateConvert(s.getTradeDate(),f));row.getCell(2).setCellStyle(dateSt);
         row.createCell(3).setCellValue(s.getShortName());
         row.createCell(4).setCellValue(s.getSecurityId());
         row.createCell(5).setCellValue(s.getType_());
@@ -560,7 +528,7 @@ public class XMLxls {
         row.createCell(30).setCellValue(Double.parseDouble(s.getIssueSize()));
         row.createCell(31).setCellValue(Double.parseDouble(s.getTrendClsPR()));
         row.createCell(32).setCellValue(Double.parseDouble(s.getTrendWapPR()));
-        if(!s.getMatDate().equals("")){row.createCell(33).setCellValue(dateConvert(s.getMatDate()));row.getCell(33).setCellStyle(dataStyle);}
+        if(!s.getMatDate().equals("")){row.createCell(33).setCellValue(dateConvert(s.getMatDate(),f));row.getCell(33).setCellStyle(dateSt);}
         else row.createCell(33).setCellValue("");
         row.createCell(34).setCellValue(Double.parseDouble(s.getMarketPrice2()));
         row.createCell(35).setCellValue(Double.parseDouble(s.getAdmittedQuote()));
@@ -582,25 +550,15 @@ public class XMLxls {
 
     }
 
-    private static void createSheetHeaderSEM03(HSSFSheet sheet, int rowNum, SEM21 s) {
+    private static void createSheetHeaderSEM03(HSSFSheet sheet, int rowNum, SEM21 s, CellStyle dateSt, CellStyle dataStyleTime, SimpleDateFormat f) {
         Row row = sheet.createRow(rowNum);
-
-        //формат даты
-        DataFormat format = sheet.getWorkbook().createDataFormat();
-        CellStyle dataStyle = sheet.getWorkbook().createCellStyle();
-        dataStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
-
-        //формат времени
-        DataFormat formatTime = sheet.getWorkbook().createDataFormat();
-        CellStyle dataStyleTime = sheet.getWorkbook().createCellStyle();
-        dataStyleTime.setDataFormat(formatTime.getFormat("HH:mm:ss"));
 
         row.createCell(0).setCellValue(Double.parseDouble(s.getNN()));
         row.createCell(1).setCellValue(Double.parseDouble(s.getTradeNo()));
         row.createCell(2).setCellValue(s.getBoardId());
         row.createCell(3).setCellValue(s.getBoardName());
-        row.createCell(4).setCellValue(dateConvert(s.getTradeDate()));row.getCell(4).setCellStyle(dataStyle);
-        row.createCell(5).setCellValue(dateConvert(s.getSettleDate()));row.getCell(5).setCellStyle(dataStyle);
+        row.createCell(4).setCellValue(dateConvert(s.getTradeDate(),f));row.getCell(4).setCellStyle(dateSt);
+        row.createCell(5).setCellValue(dateConvert(s.getSettleDate(),f));row.getCell(5).setCellStyle(dateSt);
         row.createCell(6).setCellValue(s.getShortName());
         row.createCell(7).setCellValue(s.getSecurityId());
         row.createCell(8).setCellValue(s.getBuySell());
@@ -648,31 +606,15 @@ public class XMLxls {
 
     }
 
-    private static void createSheetHeaderEQM06(HSSFSheet sheet, int rowNum, SEM21 s) {
+    private static void createSheetHeaderEQM06(HSSFSheet sheet, int rowNum, SEM21 s, CellStyle dateSt, CellStyle dataStyleTime, SimpleDateFormat f) {
         Row row = sheet.createRow(rowNum);
-
-        //формат даты
-        DataFormat format = sheet.getWorkbook().createDataFormat();
-        CellStyle dataStyle = sheet.getWorkbook().createCellStyle();
-        dataStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
-
-        //DataFormat formatTime = sheet.getWorkbook().createDataFormat();
-        //CellStyle dataStyleTime = sheet.getWorkbook().createCellStyle();
-        //dataStyleTime.setDataFormat(formatTime.getFormat("HH:mm:ss"));
-
-        //HSSFCellStyle dataStyleTime = sheet.getWorkbook().createCellStyle();
-        //dataStyleTime.setDataFormat(HSSFDataFormat.getBuiltinFormat("HH:mm:ss"));
-
-        DataFormat formatTime = sheet.getWorkbook().createDataFormat();
-        CellStyle dataStyleTime = sheet.getWorkbook().createCellStyle();
-        dataStyleTime.setDataFormat(formatTime.getFormat("HH:mm:ss"));
 
         row.createCell(0).setCellValue(Double.parseDouble(s.getNN()));
         row.createCell(1).setCellValue(Double.parseDouble(s.getTradeNo()));
         row.createCell(2).setCellValue(s.getBoardId());
         row.createCell(3).setCellValue(s.getBoardName());
-        row.createCell(4).setCellValue(dateConvert(s.getTradeDate()));row.getCell(4).setCellStyle(dataStyle);
-        row.createCell(5).setCellValue(dateConvert(s.getSettleDate()));row.getCell(5).setCellStyle(dataStyle);
+        row.createCell(4).setCellValue(dateConvert(s.getTradeDate(),f));row.getCell(4).setCellStyle(dateSt);
+        row.createCell(5).setCellValue(dateConvert(s.getSettleDate(),f));row.getCell(5).setCellStyle(dateSt);
         row.createCell(6).setCellValue(s.getShortName());
         row.createCell(7).setCellValue(s.getSecurityId());
         row.createCell(8).setCellValue(s.getBuySell());
