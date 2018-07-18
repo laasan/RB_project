@@ -55,7 +55,7 @@ public class xml550csv {
             if(nodeList.getLength()!=0) razdel1(nodeList,"11","ТипКлиента");
 
             nodeList = doc.getElementsByTagName("Раздел1.2");
-            if(nodeList.getLength()!=0) razdel1(nodeList,"11","ТипУчастника");
+            if(nodeList.getLength()!=0) razdel1(nodeList,"12","ТипУчастника");
 
             nodeList = doc.getElementsByTagName("Раздел2");
             if(nodeList.getLength()!=0)
