@@ -122,27 +122,30 @@ public class FolderMonitor440P extends Application {
 
                                 if(!name.substring(0,1).equals("_")){//если не архивный
                                     if(st.equals(" ! КОРРЕКТНО (проверьте и отправьте в архив)")){//если нет предупреждений кроме " ! КОРРЕКТНО (проверьте и отправьте в архив)"
-                                        fold.setName("_" + name);
-                                        RenameDir.rename(path+"/"+name,"_" + name);
-                                        //System.out.println(fold.getName());
-                                        //showWin();
-                                        tbl.refresh();
+                                        if(RenameDir.rename(path+"/"+name,"_" + name)){
+                                            fold.setName("_" + name);
+                                            //System.out.println(fold.getName());
+                                            //showWin();
+                                            tbl.refresh();
+                                        }
                                     }
                                     else{
                                         if(admin){
-                                            fold.setName("_" + name);
-                                            RenameDir.rename(path+"/"+name,"_" + name);
-                                            //showWin();
-                                            tbl.refresh();
+                                            if(RenameDir.rename(path+"/"+name,"_" + name)){
+                                                fold.setName("_" + name);
+                                                //showWin();
+                                                tbl.refresh();
+                                            }
                                         }
                                         else{
                                             boolean yesRename = YesNoAlertWindow.display("Предупреждение!!!","Внимание! Папка "+fold.getName()+" содержит не исправленные предупреждения. Перепроверьте.\r\n\r\nВы уверены, что её можно отправлять в архив?");
                                             //System.out.println(yesRename);
                                             if(yesRename){
-                                                fold.setName("_" + name);
-                                                RenameDir.rename(path+"/"+name,"_" + name);
-                                                //showWin();
-                                                tbl.refresh();
+                                                if(RenameDir.rename(path+"/"+name,"_" + name)){
+                                                    //showWin();
+                                                    fold.setName("_" + name);
+                                                    tbl.refresh();
+                                                }
                                             }
                                         }
                                     }

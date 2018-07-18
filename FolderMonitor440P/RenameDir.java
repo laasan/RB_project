@@ -3,7 +3,7 @@ import java.io.File;
 class RenameDir {
     private static String log = FolderMonitor440P.log;
 
-    static void rename(String path, String newName) {
+    static boolean rename(String path, String newName) {
         //Scanner scanner = new Scanner(System.in);
         //System.out.println("Enter the path of directory to rename.");
         File dir = new File(path);
@@ -27,5 +27,7 @@ class RenameDir {
             LogWriter.write(log,GetDayTime.now()+ " " + path + " не получилось переименовать");
 
         }
+
+        return isRenamed;
     }
 }
