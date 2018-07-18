@@ -257,7 +257,7 @@ public class EQM06 {
 
     public String getBalance() {
         if(this.Balance instanceof String) return Balance;
-        else return "";
+        else return "0";
     }
     public void setBalance(String balance) {
         Balance = balance;

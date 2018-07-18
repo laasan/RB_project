@@ -73,7 +73,7 @@ public class SEM03 extends EQM06{
 
     public String getOrderNo() {
         if(this.OrderNo instanceof String) return OrderNo;
-        else return "";
+        else return "0";
     }
     public void setOrderNo(String orderNo) {
         OrderNo = orderNo;

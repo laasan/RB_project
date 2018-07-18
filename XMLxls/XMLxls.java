@@ -126,6 +126,17 @@ public class XMLxls {
                     CellStyle dateStyle = sheet.getWorkbook().createCellStyle();
                     dateStyle.setDataFormat(format.getFormat("m/d/yy"));//это стиль эксель клетки poi, а выводится всёравно dd.MM.yyyy
 
+                    /*
+                    DataFormat formatEQM = sheet.getWorkbook().createDataFormat();
+                    CellStyle dateStyle = sheet.getWorkbook().createCellStyle();
+                    dateStyle.setDataFormat(formatEQM.getFormat("m/d/yy"));//это стиль эксель клетки poi, а выводится всёравно dd.MM.yyyy
+
+                    DataFormat formatSEM = sheet.getWorkbook().createDataFormat();
+                    CellStyle dateStyle = sheet.getWorkbook().createCellStyle();
+                    dateStyle.setDataFormat(formatSEM.getFormat("dd.MM.yyyy"));//если SEM начнёт ругаться
+                    //и пропиши соответственно вызовы этих форматов в нужных местах ниже
+                    */
+
                     //формат времени
                     DataFormat formatTime = sheet.getWorkbook().createDataFormat();
                     CellStyle timeStyle = sheet.getWorkbook().createCellStyle();
