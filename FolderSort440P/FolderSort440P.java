@@ -275,7 +275,7 @@ public class FolderSort440P {
 
         for (int i = 0; i < folders.length; i++) {
             //System.out.println("folders[i].isDirectory(): "+folders[i].isDirectory()+" folders[i].getPath():"+folders[i].getPath()+" path+folders[i].getName():"+path+"/"+folders[i].getName());
-            if(folders[i].isDirectory()&&folders[i].getPath().replace("\\","/").equals(path+"/"+folders[i].getName())){//что папка и чтобы в подпапки не лез
+            if(folders[i].isDirectory()&&folders[i].getPath().replace("\\","/").equals(path.replace("\\","/")+"/"+folders[i].getName())){//что папка и чтобы в подпапки не лез
                 //if(checkBox.isSelected())
                 //    folderNamesList.add(folders[i].getName());//все берём
                 //else{//если чекбокс не помечен
