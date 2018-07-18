@@ -7,7 +7,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class AlertWindow {
-
     public static void display(String title, String message){
         Stage window = new Stage();
 

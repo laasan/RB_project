@@ -8,25 +8,28 @@ public class person {
             ,UchStatus   //статус участника для Раздел2
             ,DocumentNum // Серия+Номер паспорта (для начала)
             ,SourceFileName //файл из которого его достали
+            ,CodeOtkaz   //код отказа
+            ,DateOtkaz   //дата отказа
+            ,Birthday    //день рождения физ.лица
             ;
 
     public String getNoteId() {
         if(this.NoteId != null) return NoteId;
         else return "";
     }
-/*
-    public person(String noteId, String clientType, String fio, String inn, String polnNaim, String razdel, String uchStatus, String documentNum, String sourceFileName) {
-        NoteId = noteId;
-        ClientType = clientType;
-        Fio = fio;
-        Inn = inn;
-        PolnNaim = polnNaim;
-        Razdel = razdel;
-        UchStatus = uchStatus;
-        DocumentNum = documentNum;
-        SourceFileName = sourceFileName;
-    }
-*/
+    /*
+        public person(String noteId, String clientType, String fio, String inn, String polnNaim, String razdel, String uchStatus, String documentNum, String sourceFileName) {
+            NoteId = noteId;
+            ClientType = clientType;
+            Fio = fio;
+            Inn = inn;
+            PolnNaim = polnNaim;
+            Razdel = razdel;
+            UchStatus = uchStatus;
+            DocumentNum = documentNum;
+            SourceFileName = sourceFileName;
+        }
+    */
     public void setNoteId(String noteId) {
         NoteId = noteId;
     }
@@ -102,4 +105,25 @@ public class person {
     public void setSourceFileName(String sourceFileName) {
         SourceFileName = sourceFileName;
     }
+
+    public String getCodeOtkaz() {
+        if(this.CodeOtkaz != null) return CodeOtkaz;
+        else return "";
+    }
+
+    public void setCodeOtkaz(String codeOtkaz) { CodeOtkaz = codeOtkaz; }
+
+    public String getDateOtkaz() {
+        if(this.DateOtkaz != null) return DateOtkaz;
+        else return "";
+    }
+
+    public void setDateOtkaz(String dateOtkaz) { DateOtkaz = dateOtkaz; }
+
+    public String getBirthday() {
+        if(this.Birthday != null) return Birthday;
+        else return "";
+    }
+
+    public void setBirthday(String birthday) { Birthday = birthday; }
 }

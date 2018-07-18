@@ -1,4 +1,4 @@
-﻿import javafx.application.Application;
+import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -12,7 +12,7 @@ import javafx.stage.Stage;
 
 import java.sql.*;
 
-public class finder550 extends Application {
+public class finder550 extends Application{
     Stage window;
     TableView<person> table;
     Scene loginScene, mainScene;
@@ -28,7 +28,7 @@ public class finder550 extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         window = primaryStage;
-        window.setTitle("finder550");
+        window.setTitle("finder550 (версия 2.0)");
         int recLimit = 1000;
 
         GridPane grid = new GridPane();
@@ -38,7 +38,7 @@ public class finder550 extends Application {
 
         Label nameLabel = new Label("Username:");
         GridPane.setConstraints(nameLabel,0,0);
-        TextField nameInput = new TextField("Ivanov");
+        TextField nameInput = new TextField("Kramar");
         GridPane.setConstraints(nameInput,1,0);
         Label passLabel = new Label("Password:");
         GridPane.setConstraints(passLabel,0,1);
@@ -79,11 +79,16 @@ public class finder550 extends Application {
         TextField nomdocInput = new TextField();
         nomdocInput.setPromptText("серия и/или номер");
         GridPane.setConstraints(nomdocInput,1,2);
+        Label birthdayLabel = new Label("День рождения в формате dd/mm/yyyy");
+        GridPane.setConstraints(birthdayLabel,0,3);
+        TextField birthdayInput = new TextField();
+        birthdayInput.setPromptText("dd/mm/yyyy");
+        GridPane.setConstraints(birthdayInput,1,3);
 
         Button button2 = new Button("Поиск");
-        GridPane.setConstraints(button2,1,3);
+        GridPane.setConstraints(button2,1,4);
 
-        gridMain.getChildren().addAll(fioLabel,fioInput,innLabel,innInput,nomdocLabel,nomdocInput,button2);
+        gridMain.getChildren().addAll(fioLabel,fioInput,innLabel,innInput,nomdocLabel,nomdocInput,birthdayLabel,birthdayInput,button2);
 
 
 
@@ -93,12 +98,12 @@ public class finder550 extends Application {
             ObservableList<person> persons = FXCollections.observableArrayList();
             Connection connection = null;
             Statement stmt = null;
-            String query = "select top " + recLimit + " * from tRB550 where FIO like('%"+fioInput.getText()+"%') and INN like ('%"+innInput.getText()+"%') and Passport like ('%"+nomdocInput.getText()+"%')";
+            String query = "select top " + recLimit + " * from tRB550 where FIO like('%"+fioInput.getText()+"%') and INN like ('%"+innInput.getText()+"%') and Passport like ('%"+nomdocInput.getText()+"%') and Birthday like ('%"+birthdayInput.getText()+"%')";
 
             try {
                 // Register JDBC Driver
                 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-                connection = DriverManager.getConnection("jdbc:sqlserver://dia7:1433;database=diatrain;",user,pass);
+                connection = DriverManager.getConnection("jdbc:sqlserver://dia7:1433;database=diawork;",user,pass);
 
                 stmt = connection.createStatement();
                 ResultSet rs = stmt.executeQuery(query);
@@ -118,6 +123,10 @@ public class finder550 extends Application {
                     p.setRazdel(rs.getString(7));
                     p.setUchStatus(rs.getString(8));
                     p.setDocumentNum(rs.getString(9));
+                    p.setCodeOtkaz(rs.getString(12));
+                    p.setDateOtkaz(rs.getString(13));
+                    p.setBirthday(rs.getString(14));
+                    p.setSourceFileName(rs.getString(15));
                     persons.add(p);
                 }
 
@@ -168,9 +177,25 @@ public class finder550 extends Application {
             documentNumColumn.setMinWidth(100);
             documentNumColumn.setCellValueFactory(new PropertyValueFactory<>("DocumentNum"));
 
+            TableColumn<person,String> codeOtkazColumn = new TableColumn<>("CodeOtkaz");
+            codeOtkazColumn.setMinWidth(20);
+            codeOtkazColumn.setCellValueFactory(new PropertyValueFactory<>("CodeOtkaz"));
+
+            TableColumn<person,String> dateOtkazColumn = new TableColumn<>("DateOtkaz");
+            dateOtkazColumn.setMinWidth(50);
+            dateOtkazColumn.setCellValueFactory(new PropertyValueFactory<>("DateOtkaz"));
+
+            TableColumn<person,String> birthdayColumn = new TableColumn<>("Birthday");
+            birthdayColumn.setMinWidth(50);
+            birthdayColumn.setCellValueFactory(new PropertyValueFactory<>("Birthday"));
+
+            TableColumn<person,String> sourceFileNameColumn = new TableColumn<>("InFileName");
+            sourceFileNameColumn.setMinWidth(100);
+            sourceFileNameColumn.setCellValueFactory(new PropertyValueFactory<>("SourceFileName"));
+
             table = new TableView<>();
             table.setItems(persons);
-            table.getColumns().addAll(noteIdColumn,clientTypeColumn,fioColumn,innColumn,polnNaimColumn,razdelColumn,uchStatusColumn,documentNumColumn);
+            table.getColumns().addAll(noteIdColumn,clientTypeColumn,fioColumn,innColumn,polnNaimColumn,razdelColumn,uchStatusColumn,documentNumColumn,codeOtkazColumn,dateOtkazColumn,birthdayColumn,sourceFileNameColumn);
 
             //window.setScene(loginScene);
             StackPane layout2 = new StackPane();
@@ -198,5 +223,4 @@ public class finder550 extends Application {
         window.setScene(loginScene);
         window.show();
     }
-
 }
