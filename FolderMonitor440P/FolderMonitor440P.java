@@ -3,10 +3,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -23,21 +20,23 @@ import java.beans.EventHandler;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 
 public class FolderMonitor440P extends Application {
 
-    Stage window;
-    TableView<Folder> tbl;
-    Button button;
-    CheckBox checkBox = new CheckBox("Отображать с архивными");
+    private Stage window;
+    private TableView<Folder> tbl;
+    private Button button;
+    private CheckBox checkBox = new CheckBox("Отображать с архивными");
 
-    //String path = "G:\\OTCH_CB\\440-П\\testFold\\testForMonitor440\\rum";
+    //private String path = "G:\\OTCH_CB\\440-П\\testFold\\testForMonitor440\\rum";
     //String path = "C:\\JavaProj\\FolderSort440P\\testFold\\sorted\\jey";//"E:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
-    String path = "D:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
+    private String path = "D:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
 
 
     public static void main(String[] args){
@@ -53,9 +52,7 @@ public class FolderMonitor440P extends Application {
 
         button = new Button();
         button.setText("Обновить");
-        button.setOnAction(e -> {
-            showWin();
-        });
+        button.setOnAction(e -> showWin());
 
         showWin();
     }
@@ -64,36 +61,37 @@ public class FolderMonitor440P extends Application {
     private void showWin(){
         TableColumn<Folder, String> foldName = new TableColumn<>("Имя папки");
         foldName.setMinWidth(220);
-        foldName.setCellValueFactory(new PropertyValueFactory<Folder, String>("name"));
+        foldName.setCellValueFactory(new PropertyValueFactory<>("name"));
         TableColumn<Folder, String> startDate = new TableColumn<>("Дата папки");
         startDate.setMinWidth(100);
-        startDate.setCellValueFactory(new PropertyValueFactory<Folder, String>("dateStart"));
+        startDate.setCellValueFactory(new PropertyValueFactory<>("dateStart"));
         TableColumn<Folder, String> state = new TableColumn<>("Предупреждения");
         state.setMinWidth(400);
-        state.setCellValueFactory(new PropertyValueFactory<Folder, String>("state"));
+        state.setCellValueFactory(new PropertyValueFactory<>("state"));
         TableColumn<Folder, String> filesSymb = new TableColumn<>("Содержимое");
         filesSymb.setMinWidth(500);
-        filesSymb.setCellValueFactory(new PropertyValueFactory<Folder, String>("filesSymb"));
+        filesSymb.setCellValueFactory(new PropertyValueFactory<>("filesSymb"));
 
         tbl = new TableView<>();
         tbl.setPrefHeight(800);
         tbl.setItems(getFolder());
         tbl.getColumns().addAll(foldName,startDate,state,filesSymb);
+
         tbl.setOnKeyPressed(ev -> {
             switch (ev.getCode()){
                 case A: {
                     //System.out.println("КЛАВА!!!"+e.getCode().toString());
                     ObservableList<Folder> selected;
                     selected = tbl.getSelectionModel().getSelectedItems();
-                    String name =  "";
-                    String st = "";
+                    String name;
+                    String st;
 
                     if(!selected.isEmpty()){//строка выбрана
                         name =  selected.get(0).getName();
                         st = selected.get(0).getState();
 
                         if(!name.substring(0,1).equals("_")){//если не архивный
-                            if(st.equals("ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ")){//если нет предупреждений кроме "ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ"
+                            if(st.equals("ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ")){//если нет предупреждений кроме "ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ"
                                 selected.get(0).setName("_" + name);
                                 RenameDir.rename(path+"/"+name,"_" + name);
                                 //System.out.println(selected.get(0).getName());
@@ -117,8 +115,9 @@ public class FolderMonitor440P extends Application {
             }
         });
 
+        Label lbl = new Label("для переименования в архивную, выберите строку и нажмите клавишу \"A\"(она же русская \"Ф\") на клавиатуре");
         HBox hBox = new HBox(100);
-        hBox.getChildren().addAll(button,checkBox);
+        hBox.getChildren().addAll(button,checkBox,lbl);
 
         VBox vBox = new VBox(10);
         vBox.getChildren().addAll(hBox,tbl);
@@ -133,28 +132,51 @@ public class FolderMonitor440P extends Application {
     private ObservableList<Folder> getFolder(){
         ObservableList<Folder> folders = FXCollections.observableArrayList();
 
-       //String[] f = getFolderNamesList(path);
+        //String[] f = getFolderNamesList(path);
+        //List<> tmpList = new ArrayList<String>();
+
         List<String> f = getFolderNamesList(path);
+        //String[][] tempArr = new String[4][f.size()];
+        List<String> tempList = new ArrayList<>();
         for(int i = 0; i < f.size(); i++){
-            String tmpStr = "";
-            if(f.get(i).substring(0,1).equals("_"))
-                tmpStr = f.get(i).substring(1);
-            else
-                tmpStr = f.get(i);
-            //System.out.println(f.get(i).substring(0,1));
-            String[] nameParts = tmpStr.split("_");
-            String content = getContent(path+"/"+f.get(i));
-            String prim = kwtAnalizer(path,f.get(i),content);
-            //System.out.println(f.get(i));
+            if(f.get(i).contains("_")){ //отсев папок без "_"
+                String tmpStr;
+                if(f.get(i).substring(0,1).equals("_"))
+                    tmpStr = f.get(i).substring(1);
+                else
+                    tmpStr = f.get(i);
+                //System.out.println(f.get(i).substring(0,1));
+                String[] nameParts = tmpStr.split("_");
+                String content = getContent(path+"/"+f.get(i));
+                String prim = kwtAnalizer(path,f.get(i),content);
+                //System.out.println(f.get(i));
 
-            String tmpDate; //обработка даты папки
-            if(nameParts[1].length()==8)
-                tmpDate = nameParts[1];
-            else
-                tmpDate = nameParts[1].substring(4);
+                String tmpDate; //обработка даты папки
+                if(nameParts[1].length()==8)
+                    tmpDate = nameParts[1];
+                else
+                    tmpDate = nameParts[1].substring(4);
 
-            folders.add(new Folder(f.get(i),tmpDate,prim,content));
+                //tmpList.add(f.get(i),tmpDate,prim,content);
+                //tempArr[0][i] = f.get(i);
+                //tempArr[1][i] = tmpDate;
+                //tempArr[2][i] = prim;
+                //tempArr[3][i] = content;
+
+                //String[] tempStr = new String[4];
+                //tempStr[0] = f.get(i);
+                //tempStr[1] = tmpDate;
+                //tempStr[2] = prim;
+                //tempStr[3] = content;
+
+                //tempList.add(prim);
+
+                //скорее всего здесь свою сортировку или изучи тему компаратора
+
+                folders.add(new Folder(f.get(i),tmpDate,prim,content));
+            }
         }
+        //Collections.sort(tempList);
         return folders;
     }
 
@@ -170,21 +192,26 @@ public class FolderMonitor440P extends Application {
         File file = new File(path+"/"+folder);
         File[] listKwtFiles = file.listFiles(new MyFileNameFilter(".xml","kwt"));
         boolean approved = true;
-        for (File f: listKwtFiles
-             ) {
-            try {
-                DocumentBuilder builder = factory.newDocumentBuilder();
-                Document doc = builder.parse(f);
-                NodeList nodeList = doc.getElementsByTagName("Результат");
-                String codRezProver = nodeList.item(0).getAttributes().getNamedItem("КодРезПроверки").getTextContent();
-                //System.out.println(str);
-                if(approved) approved = codRezProver.equals("01");
-            } catch (SAXException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ParserConfigurationException e) {
-                e.printStackTrace();
+        if (listKwtFiles != null) {
+            for (File f: listKwtFiles
+                 ) {
+                try {
+                    DocumentBuilder builder = factory.newDocumentBuilder();
+                    Document doc = builder.parse(f);
+                    NodeList nodeList = doc.getElementsByTagName("Результат");
+                    String codRezProver = nodeList.item(0).getAttributes().getNamedItem("КодРезПроверки").getTextContent();
+                    //System.out.println(str);
+                    if(approved) approved = codRezProver.equals("01");
+                } catch (SAXException e) {
+                    e.printStackTrace();
+                    System.out.println("SAXException");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.out.println("IOException");
+                } catch (ParserConfigurationException e) {
+                    e.printStackTrace();
+                    System.out.println("ParserConfigurationException");
+                }
             }
         }
         if(!approved) str = " ВНИМАНИЕ: негативная KWT.";
@@ -192,26 +219,41 @@ public class FolderMonitor440P extends Application {
         //проверка на достаточность по content
         String[] cnt = content.split("; ");
         String start = "";
-        for(int k = 0; k < cnt.length; k++){
-            if(cnt[k].length()==3){
-                if(folder.contains(cnt[k])) start = cnt[k];//символ начального запроса
-                cnt[k]=""; //убираем начальный запрос RPO,ROO,... и.т.д.
+        boolean notPbAnswExistance = false; //ловля не PB ответов (BOS и т.п.)
+        for(int k = 0; k < cnt.length; k++) {
+            if (cnt[k].length() == 3) {
+                if (folder.contains(cnt[k])) start = cnt[k];//символ начального запроса
+                cnt[k] = ""; //убираем начальный запрос RPO,ROO,... и.т.д.
             }
-            if(cnt[k].toLowerCase().contains("kwt")){
+        }
+
+        //System.out.println(start);
+
+        for(int k = 0; k < cnt.length; k++) {
+            //проверка на наличие ответа не PB и не kwt(д.б. обязательно?)
+            for (int l = 0; l < cnt.length; l++) {
+                //System.out.println(cnt[l]+" "+start+" "+cnt[l].contains(start)+" "+cnt[l].toLowerCase().contains("kwt")+" "+cnt[l].toLowerCase().contains("pb"));
+                if (start.length() == 3 && cnt[l].contains(start) && !cnt[l].toLowerCase().contains("kwt") && !cnt[l].toLowerCase().contains("pb"))//содержит стартовый запрос но не kwt и не pb-шка
+                    notPbAnswExistance = true;//т.е. есть не pb-шный ответ
+            }
+
+            if (cnt[k].toLowerCase().contains("kwt")) {
                 String[] kwt = cnt[k].split("_");
-                A: for(int l = 0; l < cnt.length; l++){
-                    if(cnt[l].toLowerCase().contains(kwt[1].toLowerCase()) && cnt[l].toLowerCase().contains(kwt[2].toLowerCase()) &&l!=k){
-                        cnt[l]="";
-                        cnt[k]="";
+                A:
+                for (int l = 0; l < cnt.length; l++) {
+                    if (cnt[l].toLowerCase().contains(kwt[1].toLowerCase()) && cnt[l].toLowerCase().contains(kwt[2].toLowerCase()) && l != k) {
+                        cnt[l] = "";
+                        cnt[k] = "";
                         break A;
                     }
                 }
             }
         }
+        //System.out.println(notPbAnswExistance+" "+folder);
         for (String s: cnt) cnt[0] = cnt[0] + s; //будет "" если нашлись все соответствия
         //System.out.println("|"+cnt[0]+"|");
-        if(!cnt[0].equals("")||start.equals(""))
-            str = str + " Нехватка файлов - проверяйте.";
+        if(!cnt[0].equals("")||start.equals("")||!notPbAnswExistance)//не "очистилось" cnt или нет стартового запроса или нет не-PBшного ответа(должен быть всегда?)
+            str = str + " Возможна нехватка файлов - проверяйте.";
 
         File[] listAllFiles = file.listFiles(new MyFileNameFilter(".xml",""));
         if (listAllFiles != null) {
@@ -230,14 +272,14 @@ public class FolderMonitor440P extends Application {
         else
             System.out.println("Есть папки не содержащие xml");
 
-        if(str.equals("")) str = "ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ";
+        if(str.equals("")) str = "ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ";
 
         return str;
     }
 
     private String getContent(String path){
         //String[] filesList = getFolderNamesList(path);
-        List<String> filesList = getFolderNamesList(path);
+        List<String> filesList = getFileNamesList(path);//getFolderNamesList(path);
         String str = "";
         for(int j = 0; j < filesList.size(); j++){
             //str = str + filesList[j]+";";
@@ -263,17 +305,45 @@ public class FolderMonitor440P extends Application {
         //String[] folderNames = new String[folders.length];
         List<String> folderNamesList = new ArrayList<>();
 
-
         for (int i = 0; i < folders.length; i++) {
-            //folderNames[i] = folders[i].getName();
-            if(checkBox.isSelected())
-                folderNamesList.add(folders[i].getName());//все берём
-            else{//если чекбокс не помечен
-                if(!folders[i].getName().substring(0,1).equals("_"))//если не начинается с "_"
-                    folderNamesList.add(folders[i].getName());
+            if(folders[i].isDirectory()&&folders[i].getPath().equals(path+"\\"+folders[i].getName())){//что папка и чтобы в подпапки не лез
+                //folderNames[i] = folders[i].getName();
+                if(checkBox.isSelected())
+                    folderNamesList.add(folders[i].getName());//все берём
+                else{//если чекбокс не помечен
+                    if(!folders[i].getName().substring(0,1).equals("_"))//если не начинается с "_"
+                        folderNamesList.add(folders[i].getName());
+                }
+                //System.out.println(folders[i].getName()+" "+folders[i].getPath());
             }
+
         }
         return folderNamesList;
+    }
+
+    private List<String> getFileNamesList(String path){
+        File file = new File(path);
+        File[] files = file.listFiles();
+        //String[] folderNames = new String[folders.length];
+        List<String> fileNamesList = new ArrayList<>();
+
+        for (int i = 0; i < files.length; i++) {
+            if(files[i].isFile())//файлы а не папки
+                fileNamesList.add(files[i].getName());
+            /*
+            {//файлы а не папки
+                //folderNames[i] = folders[i].getName();
+                if(checkBox.isSelected())
+                    fileNamesList.add(files[i].getName());//все берём
+                else{//если чекбокс не помечен
+                    if(!files[i].getName().substring(0,1).equals("_"))//если не начинается с "_"
+                        fileNamesList.add(files[i].getName());
+                }
+                //System.out.println(files[i].getName()+" "+files[i].getPath());
+            }
+            */
+        }
+        return fileNamesList;
     }
 
     //выбирает xml с kwt
