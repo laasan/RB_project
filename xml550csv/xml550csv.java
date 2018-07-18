@@ -13,10 +13,11 @@ public class xml550csv {
     public static person tempPerson;
     public static List<person> personList;
     public static String fileName;
+    public static boolean formatOne = true; //формат выгрузки true - в один файл, false - каждый в свой
 
     public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException {
         //String fileName = "CB_ES550P_20170627_002.XML";
-        boolean formatOne = true; //формат выгрузки true - в один файл, false - каждый в свой
+
         personList = new ArrayList<person>();
         /*
         String fileNameList[] =
@@ -33,7 +34,7 @@ public class xml550csv {
 
         */
 
-        File[] fileNameList = getFiles("C:/JavaProj/xml550csv/input",".xml");
+        File[] fileNameList = getFiles("C:/550P/input",".xml");
         String filePath;
 
         for(File file : fileNameList){
@@ -94,11 +95,14 @@ public class xml550csv {
 
                 }
 
-            if(!formatOne) CSVgen(personList,fileName); //отрабатывает если каждый файл xml в отдельный файл
+            if(!formatOne) CSVgen(personList,fileName,true); //отрабатывает если каждый файл xml в отдельный файл
 
         }
 
-        if(formatOne) CSVgen(personList,"all550_"+getCurrDate()+".XXX"); //отрабатывает если всё собирается в один файл
+        if(formatOne) {                                      //отрабатывает если всё собирается в один файл
+            CSVgen(personList,"all550_"+getCurrDate()+".XXX",true); //сегодняшнее сборище
+            CSVgen(personList,"all550.xls",false);                  //допись к уже существующему all550.xls
+        }
 
     }
 
@@ -193,13 +197,19 @@ public class xml550csv {
     }
 
 
-    public static void CSVgen(List<person> personList,String fileName){
+    public static void CSVgen(List<person> personList,String fileName,boolean newOut){
+        //newOut = true - создание нового файла на выходе, false - допись в all550.xls
         String HEADER = "NoteId;ClientType;Fio;Inn;PolnNaim;Razdel;UchStatus;DocumentNum;SourceFileName";
         String DELIMITER = ";";
         String NEW_LINE_SEPARATOR="\r\n";
         try {
-            OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream("C:/JavaProj/xml550csv/output/"+fileName.substring(0,fileName.length()-4)+".xls"), "windows-1251");
-            fileWriter.append(HEADER);
+            OutputStreamWriter fileWriter = null;
+            if(newOut){
+                fileWriter = new OutputStreamWriter(new FileOutputStream("C:/550P/output/"+fileName.substring(0,fileName.length()-4)+".xls"), "windows-1251"); //файл создаётся новый или затирается существующий
+                fileWriter.append(HEADER);
+            }
+            else fileWriter = new OutputStreamWriter(new FileOutputStream("C:/550P/output/"+fileName,true), "windows-1251");//true в FileOutputStream() делает допись в конец файла
+
             for(person p : personList){
                 fileWriter.append(NEW_LINE_SEPARATOR);
                 fileWriter.append(p.getNoteId());
