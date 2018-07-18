@@ -4,9 +4,8 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +21,7 @@ public class xml550csv {
         /*
         String fileNameList[] =
                 {"CB_ES550P_20170627_002.XML"};
-        */
+
 
         String fileNameList[] =
                 {"CB_ES550P_20170626_001.XML","CB_ES550P_20170626_002.XML","CB_ES550P_20170626_003.XML","CB_ES550P_20170626_004.XML","CB_ES550P_20170626_005.XML",
@@ -32,15 +31,22 @@ public class xml550csv {
                         "CB_ES550P_20170629_007.XML","CB_ES550P_20170629_008.XML","CB_ES550P_20170629_009.XML","CB_ES550P_20170629_010.XML","CB_ES550P_20170629_011.XML",
                         "CB_ES550P_20170629_012.XML","CB_ES550P_20170629_013.XML","CB_ES550P_20170629_014.XML"};
 
-        for(int filesNum = 0; filesNum < fileNameList.length; filesNum++){
-            fileName = fileNameList[filesNum];
+        */
+
+        File[] fileNameList = getFiles("C:/JavaProj/xml550csv/input",".xml");
+        String filePath;
+
+        for(File file : fileNameList){
+
+            fileName = file.getName();
+            filePath = file.getPath();
             System.out.println(fileName);
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
             if(!formatOne) personList = new ArrayList<person>(); //отрабатывает если каждый файл xml в отдельный файл
             DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.parse(fileName);
+            Document doc = builder.parse(filePath);
 
             //person tempPerson;
 
@@ -92,7 +98,7 @@ public class xml550csv {
 
         }
 
-        if(formatOne) CSVgen(personList,"all550.XXX"); //отрабатывает если всё собирается в один файл
+        if(formatOne) CSVgen(personList,"all550_"+getCurrDate()+".XXX"); //отрабатывает если всё собирается в один файл
 
     }
 
@@ -192,7 +198,7 @@ public class xml550csv {
         String DELIMITER = ";";
         String NEW_LINE_SEPARATOR="\r\n";
         try {
-            OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(fileName.substring(0,fileName.length()-4)+".xls"), "windows-1251");
+            OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream("C:/JavaProj/xml550csv/output/"+fileName.substring(0,fileName.length()-4)+".xls"), "windows-1251");
             fileWriter.append(HEADER);
             for(person p : personList){
                 fileWriter.append(NEW_LINE_SEPARATOR);
@@ -219,6 +225,42 @@ public class xml550csv {
         } catch (Exception e){
             System.out.println(e.getMessage());
         }
+    }
+
+    // метод сбора файлов из папки
+    private static File[] getFiles(String dir, String ext) {
+        File file = new File(dir);
+        if(!file.exists()) System.out.println(dir + " папка не существует");
+        File[] listFiles = file.listFiles(new MyFileNameFilter(ext));
+        /*
+        if(listFiles.length == 0){
+            System.out.println(dir + " не содержит файлов с расширением " + ext);
+        }else{
+            for(File f : listFiles)
+                System.out.println("Файл: " + dir + File.separator + f.getName());
+        }
+        */
+        return listFiles;
+    }
+
+    // Реализация интерфейса FileNameFilter
+    public static class MyFileNameFilter implements FilenameFilter {
+
+        private String ext;
+
+        public MyFileNameFilter(String ext){
+            this.ext = ext.toLowerCase();
+        }
+        @Override
+        public boolean accept(File dir, String name) {
+            return name.toLowerCase().endsWith(ext);
+        }
+    }
+
+    public static String getCurrDate(){
+        long curTime = System.currentTimeMillis();
+        String curStringDate = new SimpleDateFormat("yyyyMMdd").format(curTime);
+        return curStringDate;
     }
 
 }
