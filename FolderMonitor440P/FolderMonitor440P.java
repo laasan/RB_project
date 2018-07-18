@@ -62,7 +62,7 @@ public class FolderMonitor440P extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         window = primaryStage;
-        window.setTitle("FolderMon440P 2.0 (помощник мониторинга папки: "+path+" )");
+        window.setTitle("FolderMon440P 2.1 (помощник мониторинга папки: "+path+" )");
         window.setOnCloseRequest(e -> closeProgram());
         window.setHeight(600);
 
@@ -417,7 +417,7 @@ public class FolderMonitor440P extends Application {
         return folderNamesList;
     }
 
-    private List<String> getFileNamesList(String path){
+    static List<String> getFileNamesList(String path){
         File file = new File(path);
         File[] files = file.listFiles();
         //String[] folderNames = new String[folders.length];
