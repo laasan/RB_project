@@ -134,7 +134,7 @@ public class FolderSort440P {
 
             //обход вторичных и подсчёт несортированных
             for(File f : listFiles){
-                count++;
+                //count++;
                 String[] fName =  f.getName().substring(0,f.getName().lastIndexOf(".")).split("_");
 
                 String nik = f.getName().split("_")[0].substring(0,3);
