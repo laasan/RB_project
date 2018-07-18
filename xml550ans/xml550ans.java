@@ -1,4 +1,4 @@
-import org.w3c.dom.*;
+﻿import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 import javax.swing.*;
@@ -16,14 +16,14 @@ public class xml550ans {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
         //String fileName = "CB_ES550P_20170627_002.XML";
-        String IdnOR = "2313_0000";
-        String OPER = "Субботина Т.В.";
-        String TEL_OPER = "8(499) 241-63-90";
+        String IdnOR = "NNNN_0000";
+        String OPER = "Иванова И.И.";
+        String TEL_OPER = "8(123) 456-78-90";
         long curTime;
         String curStringDate;
         String curStringTime;
 
-        File[] fileList = getFiles("C:/JavaProj/xml550ans/input",".xml");
+        File[] fileList = getFiles("C:/550P/input",".xml");
         for(File file : fileList){
             curTime = System.currentTimeMillis();
             curStringDate = new SimpleDateFormat("dd/MM/yyyy").format(curTime);
@@ -47,7 +47,7 @@ public class xml550ans {
                 */
             FileWriter writeFile = null;
             try {
-                File xmlAns = new File("C:/JavaProj/xml550ans/output/"+"UV_"+IdnOR+"_"+ fileName.substring(0,fileName.length()-4) +".xml");
+                File xmlAns = new File("C:/550P/output/"+"UV_"+IdnOR+"_"+ fileName.substring(0,fileName.length()-4) +".xml");
                 writeFile = new FileWriter(xmlAns);
 
                 writeFile.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
