@@ -33,7 +33,6 @@ public class FolderMonitor440P extends Application {
     Stage window;
     TableView<Folder> tbl;
     Button button;
-    Button btnArch;
     CheckBox checkBox = new CheckBox("Отображать с архивными");
 
     //String path = "G:\\OTCH_CB\\440-П\\testFold\\testForMonitor440\\rum";
@@ -52,6 +51,17 @@ public class FolderMonitor440P extends Application {
         window.setOnCloseRequest(e -> closeProgram());
         window.setHeight(600);
 
+        button = new Button();
+        button.setText("Обновить");
+        button.setOnAction(e -> {
+            showWin();
+        });
+
+        showWin();
+    }
+
+    //обнов\отрисовка окна
+    private void showWin(){
         TableColumn<Folder, String> foldName = new TableColumn<>("Имя папки");
         foldName.setMinWidth(220);
         foldName.setCellValueFactory(new PropertyValueFactory<Folder, String>("name"));
@@ -69,43 +79,46 @@ public class FolderMonitor440P extends Application {
         tbl.setPrefHeight(800);
         tbl.setItems(getFolder());
         tbl.getColumns().addAll(foldName,startDate,state,filesSymb);
+        tbl.setOnKeyPressed(ev -> {
+            switch (ev.getCode()){
+                case A: {
+                    //System.out.println("КЛАВА!!!"+e.getCode().toString());
+                    ObservableList<Folder> selected;
+                    selected = tbl.getSelectionModel().getSelectedItems();
+                    String name =  "";
+                    String st = "";
 
-        button = new Button();
-        button.setText("Обновить");
-        button.setOnAction(e -> {
-            tbl = new TableView<>();
-            tbl.setPrefHeight(800);
-            tbl.setItems(getFolder());
-            tbl.getColumns().addAll(foldName,startDate,state,filesSymb);
+                    if(!selected.isEmpty()){//строка выбрана
+                        name =  selected.get(0).getName();
+                        st = selected.get(0).getState();
 
-            HBox hBox = new HBox(100);
-            hBox.getChildren().addAll(button,checkBox, btnArch);
-
-            VBox vBox = new VBox(10);
-            vBox.getChildren().addAll(hBox,tbl);
-            vBox.setPadding(new Insets(10,10,10,10));
-
-            Scene scene = new Scene(vBox);
-            window.setScene(scene);
-            window.show();
-        });
-
-
-
-
-        btnArch = new Button();
-        btnArch.setText("Переименовать папку в архивную");
-        btnArch.setOnAction(e -> btnArchAction());
-        tbl.setOnKeyPressed(e -> {
-            switch (e.getCode()){
-                case A: System.out.println("КЛАВА!!!");
+                        if(!name.substring(0,1).equals("_")){//если не архивный
+                            if(st.equals("ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ")){//если нет предупреждений кроме "ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ"
+                                selected.get(0).setName("_" + name);
+                                RenameDir.rename(path+"/"+name,"_" + name);
+                                //System.out.println(selected.get(0).getName());
+                                showWin();
+                            }
+                            else{
+                                boolean massRename = YesNoAlertWindow.display("Предупреждение!!!","Внимание! Данная папка содержит не исправленные предупреждения. Перепроверьте.\r\n\r\nВы уверены, что папку можно отправлять в архив?");
+                                //System.out.println(massRename);
+                                if(massRename){
+                                    RenameDir.rename(path+"/"+name,"_" + name);
+                                    showWin();
+                                }
+                            }
+                        }
+                        else if(!selected.isEmpty())
+                            AlertWindow.display("Ошибка!","Папка " + selected.get(0).getName() + " уже архивная.");
+                    }
+                    else
+                        AlertWindow.display("Ошибка!","Не выбрана строка.");
+                }
             }
-
         });
 
-        checkBox = new CheckBox("Отображать с архивными");
         HBox hBox = new HBox(100);
-        hBox.getChildren().addAll(button,checkBox, btnArch);
+        hBox.getChildren().addAll(button,checkBox);
 
         VBox vBox = new VBox(10);
         vBox.getChildren().addAll(hBox,tbl);
@@ -114,26 +127,6 @@ public class FolderMonitor440P extends Application {
         Scene scene = new Scene(vBox);
         window.setScene(scene);
         window.show();
-    }
-
-    private void btnArchAction(){
-        ObservableList<Folder> selected;
-        selected = tbl.getSelectionModel().getSelectedItems();
-        String name =  "";
-
-        if(!selected.isEmpty())
-            name =  selected.get(0).getName();
-        else
-            AlertWindow.display("Ошибка!","Не выбрана строка.");
-
-        if(!name.substring(0,1).equals("_")){//если не архивный
-            selected.get(0).setName("_" + name);
-            RenameDir.rename(path+"/"+name,"_" + name);
-            //System.out.println(selected.get(0).getName());
-        }
-        else if(!selected.isEmpty())
-            AlertWindow.display("Ошибка!","Папка " + selected.get(0).getName() + " уже архивная.");
-
     }
 
     //мониторинг папки

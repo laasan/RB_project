@@ -16,13 +16,13 @@ public class YesNoAlertWindow {
 
         window.initModality(Modality.APPLICATION_MODAL);
         window.setTitle(title);
-        window.setWidth(300);
+        window.setWidth(350);
         window.setResizable(false);
 
         Label label = new Label();
         label.setText(msg);
         label.setWrapText(true);
-        label.setMaxWidth(300);
+        label.setMaxWidth(350);
         Button yesButton = new Button("Да, всё проверено");
         yesButton.setOnAction(e -> {
             window.close();
