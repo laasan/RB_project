@@ -1,16 +1,16 @@
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Pos;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -19,9 +19,13 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.beans.EventHandler;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 
 public class FolderMonitor440P extends Application {
@@ -29,6 +33,13 @@ public class FolderMonitor440P extends Application {
     Stage window;
     TableView<Folder> tbl;
     Button button;
+    Button btnArch;
+    CheckBox checkBox = new CheckBox("Отображать с архивными");
+
+    //String path = "G:\\OTCH_CB\\440-П\\testFold\\testForMonitor440\\rum";
+    //String path = "C:\\JavaProj\\FolderSort440P\\testFold\\sorted\\jey";//"E:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
+    String path = "D:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
+
 
     public static void main(String[] args){
         launch(args);
@@ -39,7 +50,7 @@ public class FolderMonitor440P extends Application {
         window = primaryStage;
         window.setTitle("FolderMon440P 1.0 (приложение для анализа содержимого папок по 440П)");
         window.setOnCloseRequest(e -> closeProgram());
-        window.setHeight(800);
+        window.setHeight(600);
 
         TableColumn<Folder, String> foldName = new TableColumn<>("Имя папки");
         foldName.setMinWidth(220);
@@ -59,7 +70,6 @@ public class FolderMonitor440P extends Application {
         tbl.setItems(getFolder());
         tbl.getColumns().addAll(foldName,startDate,state,filesSymb);
 
-
         button = new Button();
         button.setText("Обновить");
         button.setOnAction(e -> {
@@ -68,34 +78,81 @@ public class FolderMonitor440P extends Application {
             tbl.setItems(getFolder());
             tbl.getColumns().addAll(foldName,startDate,state,filesSymb);
 
-            VBox vBox = new VBox();
-            vBox.getChildren().addAll(tbl,button);
+            HBox hBox = new HBox(100);
+            hBox.getChildren().addAll(button,checkBox, btnArch);
+
+            VBox vBox = new VBox(10);
+            vBox.getChildren().addAll(hBox,tbl);
+            vBox.setPadding(new Insets(10,10,10,10));
 
             Scene scene = new Scene(vBox);
             window.setScene(scene);
             window.show();
         });
 
-        VBox vBox = new VBox();
-        vBox.getChildren().addAll(tbl,button);
+
+
+
+        btnArch = new Button();
+        btnArch.setText("Переименовать папку в архивную");
+        btnArch.setOnAction(e -> btnArchAction());
+        tbl.setOnKeyPressed(e -> {
+            switch (e.getCode()){
+                case A: System.out.println("КЛАВА!!!");
+            }
+
+        });
+
+        checkBox = new CheckBox("Отображать с архивными");
+        HBox hBox = new HBox(100);
+        hBox.getChildren().addAll(button,checkBox, btnArch);
+
+        VBox vBox = new VBox(10);
+        vBox.getChildren().addAll(hBox,tbl);
+        vBox.setPadding(new Insets(10,10,10,10));
 
         Scene scene = new Scene(vBox);
         window.setScene(scene);
         window.show();
+    }
+
+    private void btnArchAction(){
+        ObservableList<Folder> selected;
+        selected = tbl.getSelectionModel().getSelectedItems();
+        String name =  "";
+
+        if(!selected.isEmpty())
+            name =  selected.get(0).getName();
+        else
+            AlertWindow.display("Ошибка!","Не выбрана строка.");
+
+        if(!name.substring(0,1).equals("_")){//если не архивный
+            selected.get(0).setName("_" + name);
+            RenameDir.rename(path+"/"+name,"_" + name);
+            //System.out.println(selected.get(0).getName());
+        }
+        else if(!selected.isEmpty())
+            AlertWindow.display("Ошибка!","Папка " + selected.get(0).getName() + " уже архивная.");
 
     }
 
     //мониторинг папки
-    public ObservableList<Folder> getFolder(){
+    private ObservableList<Folder> getFolder(){
         ObservableList<Folder> folders = FXCollections.observableArrayList();
 
-        String path = "C:\\JavaProj\\FolderSort440P\\testFold\\sorted\\jey";//"E:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
-        String[] f = getFolderNamesList(path);
-        for(int i = 0; i < f.length; i++){
-            String[] nameParts = f[i].split("_");
-            String content = getContent(path+"/"+f[i]);
-            String prim = kwtAnalizer(path,f[i],content);
-            //System.out.println(f[i]);
+       //String[] f = getFolderNamesList(path);
+        List<String> f = getFolderNamesList(path);
+        for(int i = 0; i < f.size(); i++){
+            String tmpStr = "";
+            if(f.get(i).substring(0,1).equals("_"))
+                tmpStr = f.get(i).substring(1);
+            else
+                tmpStr = f.get(i);
+            //System.out.println(f.get(i).substring(0,1));
+            String[] nameParts = tmpStr.split("_");
+            String content = getContent(path+"/"+f.get(i));
+            String prim = kwtAnalizer(path,f.get(i),content);
+            //System.out.println(f.get(i));
 
             String tmpDate; //обработка даты папки
             if(nameParts[1].length()==8)
@@ -103,15 +160,8 @@ public class FolderMonitor440P extends Application {
             else
                 tmpDate = nameParts[1].substring(4);
 
-            folders.add(new Folder(f[i],tmpDate,prim,content));
+            folders.add(new Folder(f.get(i),tmpDate,prim,content));
         }
-        /*
-        folders.add(new Folder("RPO_fhfhf_262622","20171211","err","RPO, KWT"));
-        folders.add(new Folder("ZSV_fhfhf_262622","20171203","finished","ZSV, KWT_ZSV"));
-        folders.add(new Folder("BOS_fhfhf_262622","20171225","err","PB1_BOS, KWT"));
-        folders.add(new Folder("AZS_fhfhf_262622","20171202","NaN","AZS, KWT"));
-        folders.add(new Folder("ROO_fhfhf_262622","20171223","waiting kwt","ROO, PB1_ROO, KWT_PB1"));
-        */
         return folders;
     }
 
@@ -119,7 +169,7 @@ public class FolderMonitor440P extends Application {
         System.out.println("Program is closed.");
     }
 
-    public String kwtAnalizer(String path, String folder, String content){
+    private String kwtAnalizer(String path, String folder, String content){
         //System.out.println(filePath);
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         String str = "";
@@ -171,27 +221,38 @@ public class FolderMonitor440P extends Application {
             str = str + " Нехватка файлов - проверяйте.";
 
         File[] listAllFiles = file.listFiles(new MyFileNameFilter(".xml",""));
-        for (File f: listAllFiles) {
-            if(!f.getName().toLowerCase().contains(folder.toLowerCase()))
-            {
-                str = "Лишние файлы - проверяйте." + str;
-                break;
+        if (listAllFiles != null) {
+            for (File f: listAllFiles) {
+                String fldrName;
+                fldrName = folder.toLowerCase();
+                if(fldrName.substring(0,1).equals("_"))
+                    fldrName = fldrName.substring(1); //убираем архивное подчеркивание если есть
+                if(!f.getName().toLowerCase().contains(fldrName))
+                {
+                    str = "Лишние файлы - проверяйте." + str;
+                    break;
+                }
             }
         }
+        else
+            System.out.println("Есть папки не содержащие xml");
+
+        if(str.equals("")) str = "ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ";
 
         return str;
     }
 
-    public String getContent(String path){
-        String[] filesList = getFolderNamesList(path);
+    private String getContent(String path){
+        //String[] filesList = getFolderNamesList(path);
+        List<String> filesList = getFolderNamesList(path);
         String str = "";
-        for(int j = 0; j < filesList.length; j++){
+        for(int j = 0; j < filesList.size(); j++){
             //str = str + filesList[j]+";";
 
-            if(filesList[j].contains("xml")||filesList[j].contains("XML")){
+            if(filesList.get(j).contains("xml")||filesList.get(j).contains("XML")){
                 //str = str + filesList[j]+";";
-                String[] partsFileName = filesList[j].split("_");
-                //System.out.println(filesList[j]);
+                String[] partsFileName = filesList.get(j).split("_");
+                //System.out.println(filesList.get(j));
                 if(partsFileName[0].toLowerCase().equals("kwtfcb"))
                     str = str + partsFileName[0]+"_"+partsFileName[1]+"_"+partsFileName[2].substring(0,3)+"; ";
                 else if(partsFileName.length==3)
@@ -199,20 +260,27 @@ public class FolderMonitor440P extends Application {
                 else
                     str = str + partsFileName[0]+"_"+partsFileName[1].substring(0,3)+"; ";
             }
-
         }
         return str;
     }
 
-    public String[] getFolderNamesList(String path){
+    private List<String> getFolderNamesList(String path){
         File file = new File(path);
         File[] folders = file.listFiles();
-        String[] folderNames = new String[folders.length];
+        //String[] folderNames = new String[folders.length];
+        List<String> folderNamesList = new ArrayList<>();
 
-        for (int i = 0; i < folderNames.length; i++) {
-            folderNames[i] = folders[i].getName();
+
+        for (int i = 0; i < folders.length; i++) {
+            //folderNames[i] = folders[i].getName();
+            if(checkBox.isSelected())
+                folderNamesList.add(folders[i].getName());//все берём
+            else{//если чекбокс не помечен
+                if(!folders[i].getName().substring(0,1).equals("_"))//если не начинается с "_"
+                    folderNamesList.add(folders[i].getName());
+            }
         }
-        return folderNames;
+        return folderNamesList;
     }
 
     //выбирает xml с kwt
@@ -220,7 +288,7 @@ public class FolderMonitor440P extends Application {
         private String extention;
         private String word;
 
-        public MyFileNameFilter(String extention, String word){
+        private MyFileNameFilter(String extention, String word){
             this.extention = extention.toLowerCase();
             this.word = word.toLowerCase();
         }
