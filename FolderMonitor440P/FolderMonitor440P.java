@@ -18,9 +18,11 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.beans.EventHandler;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -33,8 +35,8 @@ public class FolderMonitor440P extends Application {
 
     //private String path = "G:\\OTCH_CB\\440-П\\testFold\\testForMonitor440\\rum";
     //String path = "C:\\JavaProj\\FolderSort440P\\testFold\\sorted\\jey";//"E:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
-    private String path = "D:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
-
+    private static String path = "D:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
+    //static String log = path + "\\logMonitor440P";
 
     public static void main(String[] args){
         launch(args);
@@ -88,7 +90,7 @@ public class FolderMonitor440P extends Application {
                         st = selected.get(0).getState();
 
                         if(!name.substring(0,1).equals("_")){//если не архивный
-                            if(st.equals(" _ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ")){//если нет предупреждений кроме "ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ"
+                            if(st.equals(" ! ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ")){//если нет предупреждений кроме "ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ"
                                 selected.get(0).setName("_" + name);
                                 RenameDir.rename(path+"/"+name,"_" + name);
                                 //System.out.println(selected.get(0).getName());
@@ -149,32 +151,25 @@ public class FolderMonitor440P extends Application {
                 //System.out.println(f.get(i));
 
                 String tmpDate; //обработка даты папки
-                if(nameParts[1].length()==8)
-                    tmpDate = nameParts[1];
+                //System.out.println(nameParts.length);
+                if(nameParts.length>=3){
+                    if(nameParts[1].length()==8)
+                        tmpDate = nameParts[1];
+                    else{
+                        if(nameParts[1].length()>4)
+                            tmpDate = nameParts[1].substring(4);
+                        else
+                            tmpDate = "error 1 format folder";
+                    }
+                }
                 else
-                    tmpDate = nameParts[1].substring(4);
-
-                //tmpList.add(f.get(i),tmpDate,prim,content);
-                //tempArr[0][i] = f.get(i);
-                //tempArr[1][i] = tmpDate;
-                //tempArr[2][i] = prim;
-                //tempArr[3][i] = content;
-
-                //String[] tempStr = new String[4];
-                //tempStr[0] = f.get(i);
-                //tempStr[1] = tmpDate;
-                //tempStr[2] = prim;
-                //tempStr[3] = content;
-
-                //tempList.add(prim);
-
-                //скорее всего здесь свою сортировку или изучи тему компаратора
+                    tmpDate = "error 2 format folder";
 
                 folders.add(new Folder(f.get(i),tmpDate,prim,content));
             }
         }
 
-        Collections.sort(folders, Folder.Comparators.STATE);
+        folders.sort(Folder.Comparators.STATE);
 
         return folders;
     }
@@ -271,7 +266,7 @@ public class FolderMonitor440P extends Application {
         else
             System.out.println("Есть папки не содержащие xml");
 
-        if(str.equals("")) str = " _ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ";
+        if(str.equals("")) str = " ! ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ";
 
         return str;
     }
@@ -359,6 +354,8 @@ public class FolderMonitor440P extends Application {
             return name.toLowerCase().contains(word) && name.toLowerCase().endsWith(extention);
         }
     }
+
+
 
 
 }
