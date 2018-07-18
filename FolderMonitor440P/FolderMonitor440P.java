@@ -78,6 +78,7 @@ public class FolderMonitor440P extends Application {
         tbl.setPrefHeight(800);
         tbl.setItems(getFolder());
         tbl.getColumns().addAll(foldName,startDate,state,filesSymb);
+        tbl.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         tbl.setOnKeyPressed(ev -> {
             switch (ev.getCode()){
@@ -88,35 +89,42 @@ public class FolderMonitor440P extends Application {
                     String name;
                     String st;
 
-                    if(!selected.isEmpty()){//строка выбрана
-                        name =  selected.get(0).getName();
-                        st = selected.get(0).getState();
+                    if(!selected.isEmpty()){//строка или строки выбраны
+                        for (Folder fold: selected) {
+                            name =  fold.getName();
+                            st = fold.getState();
 
-                        if(!name.substring(0,1).equals("_")){//если не архивный
-                            if(st.equals(" ! ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ")){//если нет предупреждений кроме "ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ"
-                                selected.get(0).setName("_" + name);
-                                RenameDir.rename(path+"/"+name,"_" + name);
-                                //System.out.println(selected.get(0).getName());
-                                showWin();
-                            }
-                            else{
-                                boolean massRename = YesNoAlertWindow.display("Предупреждение!!!","Внимание! Данная папка содержит не исправленные предупреждения. Перепроверьте.\r\n\r\nВы уверены, что папку можно отправлять в архив?");
-                                //System.out.println(massRename);
-                                if(massRename){
+                            if(!name.substring(0,1).equals("_")){//если не архивный
+                                if(st.equals(" ! ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ")){//если нет предупреждений кроме "ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ"
+                                    fold.setName("_" + name);
                                     RenameDir.rename(path+"/"+name,"_" + name);
+                                    //System.out.println(fold.getName());
                                     showWin();
                                 }
+                                else{
+                                    boolean yesRename = YesNoAlertWindow.display("Предупреждение!!!","Внимание! Папка "+fold.getName()+" содержит не исправленные предупреждения. Перепроверьте.\r\n\r\nВы уверены, что её можно отправлять в архив?");
+                                    //System.out.println(yesRename);
+                                    if(yesRename){
+                                        RenameDir.rename(path+"/"+name,"_" + name);
+                                        showWin();
+                                    }
+                                }
                             }
+                            else //if(!selected.isEmpty())
+                                AlertWindow.display("Ошибка!","Папка " + fold.getName() + " уже архивная.");
                         }
-                        else if(!selected.isEmpty())
-                            AlertWindow.display("Ошибка!","Папка " + selected.get(0).getName() + " уже архивная.");
                     }
                     else
                         AlertWindow.display("Ошибка!","Не выбрана строка.");
+                    break;
                 }
                 case L: {
                     ObservableList<Folder> selected;
                     selected = tbl.getSelectionModel().getSelectedItems();
+                    if(selected.size()>1){
+                        AlertWindow.display("Ошибка","Выбрано более одной строки.\r\nДля просмотра содержимого надо выбирать одну строку.");
+                        break;
+                    }
                     String name = selected.get(0).getName();
                     JFileChooser fileopen = new JFileChooser(path+"/"+name);//"C:\\");
 
@@ -130,11 +138,12 @@ public class FolderMonitor440P extends Application {
                             AlertWindow.display("Ошибка","Ошибка открытия файла. Сообщите разработчику.\r\nОжидаемый путь iexplorer: C:\\Program Files\\Internet Explorer\\iexplore.exe");
                         }
                     }
+                    break;
                 }
             }
         });
 
-        Label lbl = new Label("действия через клавиатуру:\r\nArchiv: для переименования в архивную, выберите строку и нажмите клавишу \"A\"(она же русская \"Ф\")\r\nLook: для просмотра содержимого папки и содержимого файлов нажмите клавишу \"L\"(она же русская \"Д\")");
+        Label lbl = new Label("действия через клавиатуру:\r\nArchiv: для переименования в архивную, выберите одну или несколько строк и нажмите клавишу \"A\"(она же русская \"Ф\")\r\nLook: для просмотра содержимого папки и содержимого её файлов, выберите строку и нажмите клавишу \"L\"(она же русская \"Д\")");
         lbl.setMinHeight(50);
         HBox hBox = new HBox(100);
         hBox.getChildren().addAll(button,checkBox,lbl);
