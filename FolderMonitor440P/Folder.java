@@ -4,6 +4,7 @@ public class Folder implements Comparable<Folder>{
 
     private String name;
     private String dateStart;
+    private String dateChange;
     private String state;
     private String filesSymb;
 
@@ -11,13 +12,15 @@ public class Folder implements Comparable<Folder>{
     public Folder(){
         this.name = "";
         this.dateStart = "19000101";
+        this.dateChange = "";
         this.state = "";
         this.filesSymb = "";
     }
 
-    public Folder(String name, String dateStart, String state, String filesSymb){
+    public Folder(String name, String dateStart, String dateChange, String state, String filesSymb){
         this.name = name;
         this.dateStart = dateStart;
+        this.dateChange = dateChange;
         this.state = state;
         this.filesSymb = filesSymb;
     }
@@ -28,6 +31,14 @@ public class Folder implements Comparable<Folder>{
 
     public void setDateStart(String dateStart) {
         this.dateStart = dateStart;
+    }
+
+    public String getDateChange() {
+        return dateChange;
+    }
+
+    public void setDateChange(String dateChange) {
+        this.dateChange = dateChange;
     }
 
     public String getName() {

@@ -15,28 +15,42 @@ import javax.swing.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
-import static javafx.scene.input.KeyCode.L;
 
 public class FolderMonitor440P extends Application {
 
     private Stage window;
     private TableView<Folder> tbl;
     private Button button;
-    private CheckBox checkBox = new CheckBox("Отображать с архивными");
+    private CheckBox checkBox = new CheckBox("При обновлении отображать с архивными");
+    //private ProgressBar pb = new ProgressBar();
 
     //private static String path = "G:\\OTCH_CB\\440-П\\testFold\\testForMonitor440\\rum";
-    //String path = "C:\\JavaProj\\FolderSort440P\\testFold\\sorted\\jey";//"E:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
-    private static String path = "D:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
-    static String log = path + "\\logMonitor440P"; //если сделать private, то RenameDir не возьмёт, по дефолту он package-private
+    //private static String path = "G:\\OTCH_CB\\440-П\\jey";
+    //private static String path = "G:\\OTCH_CB\\440-П\\kramar";
+    //private static String path = "G:\\OTCH_CB\\440-П\\rum";
+    static String path = "D:\\JavaProj\\FolderSort440P\\testFold\\sorted\\jey";
+    //private static String path = "G:\\OTCH_CB\\440-П\\rum";
+    //private static String path = "D:\\JavaProj\\FolderMonitor440P\\sorted\\jey";
+    static String log = ""; //если сделать private, то RenameDir не возьмёт, по дефолту он package-private
+    static boolean archAvailable = true;
+    static boolean admin = false;
 
-    public static void main(String[] args){
+    public static void main(String[] args){//args[0] - путь, args[1] - noarch или пустота
        // try{
-            LogWriter.write(log,GetDayTime.now()+" ВХОД в программу");
+            if(args.length!=0) path = "G:\\OTCH_CB\\440-П\\" + args[0];
+            if(args.length>1&&args[1].equals("noarch")) archAvailable = false;
+
+            log = path + "\\logMonitor440P";
+
+            if(archAvailable&&!admin)
+                LogWriter.write(log,GetDayTime.now() + " START prog");
+            if(admin)
+                LogWriter.write(log,GetDayTime.now() + " START prog Admin");
+
+            //System.out.println("*"+getInf(path+"/"+"20171214_ROO14525294_502720171213_000667"/*f.get(i)*/+"/inf")+"*");
             launch(args);
         /*
         } catch (IllegalStateException ex){
@@ -48,7 +62,7 @@ public class FolderMonitor440P extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         window = primaryStage;
-        window.setTitle("FolderMon440P 1.0 (приложение для анализа содержимого папок по 440П)");
+        window.setTitle("FolderMon440P 2.0 (помощник мониторинга папки: "+path+" )");
         window.setOnCloseRequest(e -> closeProgram());
         window.setHeight(600);
 
@@ -61,14 +75,24 @@ public class FolderMonitor440P extends Application {
 
     //обнов\отрисовка окна
     private void showWin(){
+        Stage windowWait = new Stage();
+        windowWait.setTitle("Подождите идёт обработка...");
+        Label labelWait = new Label();
+        Scene sceneWait = new Scene(labelWait,300,1);
+        windowWait.setScene(sceneWait);
+        windowWait.show();
+
         TableColumn<Folder, String> foldName = new TableColumn<>("Имя папки");
-        foldName.setMinWidth(220);
+        foldName.setMinWidth(280);
         foldName.setCellValueFactory(new PropertyValueFactory<>("name"));
         TableColumn<Folder, String> startDate = new TableColumn<>("Дата папки");
         startDate.setMinWidth(100);
         startDate.setCellValueFactory(new PropertyValueFactory<>("dateStart"));
+        TableColumn<Folder, String> changeDate = new TableColumn<>("Изменение");
+        changeDate.setMinWidth(100);
+        changeDate.setCellValueFactory(new PropertyValueFactory<>("dateChange"));
         TableColumn<Folder, String> state = new TableColumn<>("Предупреждения");
-        state.setMinWidth(400);
+        state.setMinWidth(280);
         state.setCellValueFactory(new PropertyValueFactory<>("state"));
         TableColumn<Folder, String> filesSymb = new TableColumn<>("Содержимое");
         filesSymb.setMinWidth(500);
@@ -76,76 +100,103 @@ public class FolderMonitor440P extends Application {
 
         tbl = new TableView<>();
         tbl.setPrefHeight(800);
-        tbl.setItems(getFolder());
-        tbl.getColumns().addAll(foldName,startDate,state,filesSymb);
+        ObservableList<Folder> folderObservableList = getFolder();
+        tbl.setItems(folderObservableList);
+        tbl.getColumns().addAll(foldName,startDate,changeDate,state,filesSymb);
         tbl.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         tbl.setOnKeyPressed(ev -> {
             switch (ev.getCode()){
                 case A: {
-                    //System.out.println("КЛАВА!!!"+e.getCode().toString());
-                    ObservableList<Folder> selected;
-                    selected = tbl.getSelectionModel().getSelectedItems();
-                    String name;
-                    String st;
+                    if(archAvailable){
+                        //System.out.println("КЛАВА!!!"+e.getCode().toString());
+                        ObservableList<Folder> selected;
+                        selected = tbl.getSelectionModel().getSelectedItems();
+                        String name;
+                        String st;
 
-                    if(!selected.isEmpty()){//строка или строки выбраны
-                        for (Folder fold: selected) {
-                            name =  fold.getName();
-                            st = fold.getState();
+                        if(!selected.isEmpty()){//строка или строки выбраны
+                            for (Folder fold: selected) {
+                                name =  fold.getName();
+                                st = fold.getState();
 
-                            if(!name.substring(0,1).equals("_")){//если не архивный
-                                if(st.equals(" ! ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ")){//если нет предупреждений кроме "ПРОВЕРЬТЕ И ОТПРАВЬТЕ В АРХИВ"
-                                    fold.setName("_" + name);
-                                    RenameDir.rename(path+"/"+name,"_" + name);
-                                    //System.out.println(fold.getName());
-                                    showWin();
-                                }
-                                else{
-                                    boolean yesRename = YesNoAlertWindow.display("Предупреждение!!!","Внимание! Папка "+fold.getName()+" содержит не исправленные предупреждения. Перепроверьте.\r\n\r\nВы уверены, что её можно отправлять в архив?");
-                                    //System.out.println(yesRename);
-                                    if(yesRename){
+                                if(!name.substring(0,1).equals("_")){//если не архивный
+                                    if(st.equals(" ! КОРРЕКТНО (проверьте и отправьте в архив)")){//если нет предупреждений кроме " ! КОРРЕКТНО (проверьте и отправьте в архив)"
+                                        fold.setName("_" + name);
                                         RenameDir.rename(path+"/"+name,"_" + name);
-                                        showWin();
+                                        //System.out.println(fold.getName());
+                                        //showWin();
+                                        tbl.refresh();
+                                    }
+                                    else{
+                                        if(admin){
+                                            fold.setName("_" + name);
+                                            RenameDir.rename(path+"/"+name,"_" + name);
+                                            //showWin();
+                                            tbl.refresh();
+                                        }
+                                        else{
+                                            boolean yesRename = YesNoAlertWindow.display("Предупреждение!!!","Внимание! Папка "+fold.getName()+" содержит не исправленные предупреждения. Перепроверьте.\r\n\r\nВы уверены, что её можно отправлять в архив?");
+                                            //System.out.println(yesRename);
+                                            if(yesRename){
+                                                fold.setName("_" + name);
+                                                RenameDir.rename(path+"/"+name,"_" + name);
+                                                //showWin();
+                                                tbl.refresh();
+                                            }
+                                        }
                                     }
                                 }
+                                else //if(!selected.isEmpty())
+                                    AlertWindow.display("Ошибка!","Папка " + fold.getName() + " уже архивная.");
                             }
-                            else //if(!selected.isEmpty())
-                                AlertWindow.display("Ошибка!","Папка " + fold.getName() + " уже архивная.");
                         }
+                        else
+                            AlertWindow.display("Ошибка!","Не выбрана строка.");
                     }
-                    else
-                        AlertWindow.display("Ошибка!","Не выбрана строка.");
+
                     break;
                 }
                 case L: {
-                    ObservableList<Folder> selected;
-                    selected = tbl.getSelectionModel().getSelectedItems();
-                    if(selected.size()>1){
-                        AlertWindow.display("Ошибка","Выбрано более одной строки.\r\nДля просмотра содержимого надо выбирать одну строку.");
-                        break;
-                    }
-                    String name = selected.get(0).getName();
-                    JFileChooser fileopen = new JFileChooser(path+"/"+name);//"C:\\");
-
-                    int ret = fileopen.showDialog(null, "Посмотреть содержимое");
-                    if (ret == JFileChooser.APPROVE_OPTION) {
-                        File fileView = fileopen.getSelectedFile();
-                        try {
-                            ProcessBuilder pb = new ProcessBuilder("C:\\Program Files\\Internet Explorer\\iexplore.exe", fileView.getPath());
-                            pb.start();
-                        } catch (IOException e) {
-                            AlertWindow.display("Ошибка","Ошибка открытия файла. Сообщите разработчику.\r\nОжидаемый путь iexplorer: C:\\Program Files\\Internet Explorer\\iexplore.exe");
+                    boolean look = true;
+                    while(look){
+                        ObservableList<Folder> selected;
+                        selected = tbl.getSelectionModel().getSelectedItems();
+                        if(selected.size()>1){
+                            AlertWindow.display("Ошибка","Выбрано более одной строки.\r\nДля просмотра содержимого надо выбирать одну строку.");
+                            break;
                         }
+                        String name = selected.get(0).getName();
+                        JFileChooser fileopen = new JFileChooser(path+"/"+name);//"C:\\");
+                        window.hide();
+
+                        int ret = fileopen.showDialog(null, "Посмотреть содержимое");
+
+                        if (ret == JFileChooser.APPROVE_OPTION) {
+                            File fileView = fileopen.getSelectedFile();
+                            try {
+                                ProcessBuilder pb = new ProcessBuilder("C:\\Program Files\\Internet Explorer\\iexplore.exe", fileView.getPath());
+                                pb.start();
+                            } catch (IOException e) {
+                                AlertWindow.display("Ошибка","Ошибка открытия файла. Сообщите разработчику.\r\nОжидаемый путь iexplorer: C:\\Program Files\\Internet Explorer\\iexplore.exe");
+                            }
+                        }
+
+                        if(ret==JFileChooser.CANCEL_OPTION)
+                            look = false;
                     }
+                    window.show();
+
                     break;
                 }
             }
         });
 
         Label lbl = new Label("действия через клавиатуру:\r\nArchiv: для переименования в архивную, выберите одну или несколько строк и нажмите клавишу \"A\"(она же русская \"Ф\")\r\nLook: для просмотра содержимого папки и содержимого её файлов, выберите строку и нажмите клавишу \"L\"(она же русская \"Д\")");
+        if(!archAvailable)
+            lbl.setText("действия через клавиатуру:\r\nArchiv: недоступно (сокращённая версия)\r\nLook: для просмотра содержимого папки и содержимого её файлов, выберите строку и нажмите клавишу \"L\"(она же русская \"Д\")");
         lbl.setMinHeight(50);
-        HBox hBox = new HBox(100);
+        HBox hBox = new HBox(50);
         hBox.getChildren().addAll(button,checkBox,lbl);
 
         VBox vBox = new VBox(10);
@@ -154,20 +205,20 @@ public class FolderMonitor440P extends Application {
 
         Scene scene = new Scene(vBox);
         window.setScene(scene);
+
+        windowWait.close();
+
         window.show();
     }
 
     //мониторинг папки
     private ObservableList<Folder> getFolder(){
         ObservableList<Folder> folders = FXCollections.observableArrayList();
-
-        //String[] f = getFolderNamesList(path);
-        //List<> tmpList = new ArrayList<String>();
-
         List<String> f = getFolderNamesList(path);
         //String[][] tempArr = new String[4][f.size()];
         List<String> tempList = new ArrayList<>();
         for(int i = 0; i < f.size(); i++){
+            //System.out.println(f.get(i));
             if(f.get(i).contains("_")){ //отсев папок без "_"
                 String tmpStr;
                 if(f.get(i).substring(0,1).equals("_"))
@@ -182,20 +233,15 @@ public class FolderMonitor440P extends Application {
 
                 String tmpDate; //обработка даты папки
                 //System.out.println(nameParts.length);
-                if(nameParts.length>=3){
-                    if(nameParts[1].length()==8)
-                        tmpDate = nameParts[1];
-                    else{
-                        if(nameParts[1].length()>4)
-                            tmpDate = nameParts[1].substring(4);
-                        else
-                            tmpDate = "error 1 format folder";
-                    }
-                }
+                if(nameParts[0]!=null)
+                    tmpDate = nameParts[0];
                 else
-                    tmpDate = "error 2 format folder";
+                    tmpDate = nameParts[1];
 
-                folders.add(new Folder(f.get(i),tmpDate,prim,content));
+                String changeDate = getInf(path+"/"+f.get(i)+"/inf");
+                if(changeDate==null) changeDate = "no inf";
+
+                folders.add(new Folder(f.get(i),tmpDate,changeDate,prim,content));
             }
         }
 
@@ -206,7 +252,10 @@ public class FolderMonitor440P extends Application {
 
     private void closeProgram(){
         //System.out.println("Program is closed.");
-        LogWriter.write(log,GetDayTime.now()+" ВЫХОД из программы");
+        if(archAvailable&&!admin)
+            LogWriter.write(log,GetDayTime.now()+" EXIT prog");
+        if(admin)
+            LogWriter.write(log,GetDayTime.now()+" EXIT prog Admin");
     }
 
     private String kwtAnalizer(String path, String folder, String content){
@@ -287,6 +336,7 @@ public class FolderMonitor440P extends Application {
                 fldrName = folder.toLowerCase();
                 if(fldrName.substring(0,1).equals("_"))
                     fldrName = fldrName.substring(1); //убираем архивное подчеркивание если есть
+                fldrName = fldrName.substring(folder.indexOf("_")+1);//теперь убираем начальную дату папки
                 if(!f.getName().toLowerCase().contains(fldrName))
                 {
                     str = "Лишние файлы - проверяйте." + str;
@@ -297,9 +347,26 @@ public class FolderMonitor440P extends Application {
         else
             System.out.println("Есть папки не содержащие xml");
 
-        if(str.equals("")) str = " ! ПРОВЕРЬТЕ И ЕСЛИ ВСЁ КОРРЕКТНО, ОТПРАВЬТЕ В АРХИВ";
+        if(str.equals("")) str = " ! КОРРЕКТНО (проверьте и отправьте в архив)";
 
         return str;
+    }
+
+    private static String getInf(String inf) {
+        String s = null;
+        try {
+            BufferedReader fReader = new BufferedReader(new InputStreamReader(new FileInputStream(inf), "Windows-1251"));
+            s = fReader.readLine();
+            fReader.close();
+        } catch (UnsupportedEncodingException e) {
+            LogWriter.write(log, "Ошибка кодировки inf.");
+        } catch (FileNotFoundException e) {
+            LogWriter.write(log, "Не найден inf.");
+        } catch (IOException e) {
+            LogWriter.write(log, "Ошибка с inf.");
+        }
+
+        return s;
     }
 
     private String getContent(String path){
@@ -332,6 +399,7 @@ public class FolderMonitor440P extends Application {
 
         for (int i = 0; i < folders.length; i++) {
             if(folders[i].isDirectory()&&folders[i].getPath().equals(path+"\\"+folders[i].getName())){//что папка и чтобы в подпапки не лез
+                //System.out.println(folders[i].isDirectory()+" "+folders[i].getPath()+" "+path+"\\"+folders[i].getName());
                 //folderNames[i] = folders[i].getName();
                 if(checkBox.isSelected())
                     folderNamesList.add(folders[i].getName());//все берём
