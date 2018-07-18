@@ -28,7 +28,7 @@ public class finder550 extends Application{
     @Override
     public void start(Stage primaryStage) throws Exception {
         window = primaryStage;
-        window.setTitle("finder550 (версия 2.0)");
+        window.setTitle("finder550 (версия 2.1)");
         int recLimit = 1000;
 
         GridPane grid = new GridPane();
@@ -131,6 +131,7 @@ public class finder550 extends Application{
                 }
 
             } catch (Exception ex) {
+                AlertWindow.display("Ошибка входа!","Неверно введены логин или пароль\n Закройте и запустите программу заново");
                 ex.printStackTrace();
             } finally {
                 try {
