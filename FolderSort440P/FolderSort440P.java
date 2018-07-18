@@ -78,6 +78,7 @@ public class FolderSort440P {
 
         if(listFiles.length == 0){
             logOrInfWriter(log, true,dir + " не содержит файлов с расширением" + ext);
+            shortLog = shortLog + dir + " не содержит файлов с расширением" + ext;
         } else {
             //первый цикл по стартовым, чтобы сначала создались новые init-папки и туда пошли вторичные из текущего запуска вторым циклом
             for(File f : listFiles){
@@ -211,9 +212,9 @@ public class FolderSort440P {
                     }
                 }
             }
-            logOrInfWriter(log,true,"Готово "+ getDayTimeNow() +". Обработано файлов: " + count + ". Из них стартовых: " + init + "; ошибочных: " + err + "; не отсортированных: " + unsort + ".");
-            shortLog = shortLog + "Готово "+ getDayTimeNow().substring(0,14) +". Обработано файлов: " + count + ". Из них стартовых: " + init + "; ошибочных: " + err + "; не отсортированных: " + unsort + "."+"\r\n";
         }
+        logOrInfWriter(log,true,"Готово "+ getDayTimeNow() +". Обработано файлов: " + count + ". Из них стартовых: " + init + "; ошибочных: " + err + "; не отсортированных: " + unsort + ".");
+        shortLog = shortLog + "Готово "+ getDayTimeNow().substring(0,14) +". Обработано файлов: " + count + ". Из них стартовых: " + init + "; ошибочных: " + err + "; не отсортированных: " + unsort + "."+"\r\n";
     }
 
     public static void startFolder(String name,File f, String out, List<String> fList){
