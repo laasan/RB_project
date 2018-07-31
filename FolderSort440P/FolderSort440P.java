@@ -160,6 +160,10 @@ public class FolderSort440P {
                         notStartFolder(fName[1]+"_"+fName[2]+"_"+fName[3], f, dirOut[1],fldrList1);
                         break;
                     }
+                    case "BNS": {
+                        notStartFolder(fName[1]+"_"+fName[2]+"_"+fName[3], f, dirOut[1],fldrList1);
+                        break;
+                    }
                     case "KWT": {
                         if(f.getName().contains("ROO")||f.getName().contains("RPO"))
                             notStartFolder(fName[2]+"_"+fName[3]+"_"+fName[4], f, dirOut[0],fldrList0);
